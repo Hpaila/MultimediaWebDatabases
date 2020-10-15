@@ -8,8 +8,8 @@ from statistics import mean
 
 MEAN = 0  # from Phase 1
 STANDARD_DEVIATION = 0.25  # from Phase 1
-OUTPUT_FOLDER = "./Outputs"
-OUTPUT_FILE_PATH = "./Outputs/words"
+OUTPUT_FOLDER = "./outputs"
+OUTPUT_FILE_PATH = "./outputs/words"
 band_ranges = []
 feature_dict = set()
 
