@@ -38,6 +38,9 @@ def create_tf_vectors(directory_path, feature_list):
     #Creating TF vectors
     tf_vector_output_file = open(directory_path + "vectors/tf_vectors.csv", "w")
     csv_write = csv.writer(tf_vector_output_file)
+    header = [(-1,-1,-1,-1)]
+    header.extend(feature_list)
+    csv_write.writerow(header)
     for file_name, words_map in words_in_object_map.items():
         tf_vector = [file_name]
         for feature in feature_list:
@@ -61,7 +64,7 @@ def create_tf_idf_vectors(directory_path, gestures_dir, feature_list):
         count_of_a_feature_in_object.append(count)
     
     #Creating TF-IDF vectors
-    tf_vectors = np.array(pd.read_csv(directory_path + "vectors/tf_vectors.csv", header = None))
+    tf_vectors = np.array(pd.read_csv(directory_path + "vectors/tf_vectors.csv"))
     idf_vector = np.array(count_of_a_feature_in_object)
     idf_vector = np.divide(number_of_files, idf_vector)
     idf_vector = np.log(idf_vector)
@@ -70,7 +73,11 @@ def create_tf_idf_vectors(directory_path, gestures_dir, feature_list):
     # idf_vector = np.divide(idf_vector, max_idf)
     tf_idf_vectors = tf_vectors[0:, 1:] * idf_vector
     tf_idf_vectors = np.hstack((tf_vectors[0:, :1], tf_idf_vectors))
-    pd.DataFrame(tf_idf_vectors).to_csv(directory_path + "vectors/tf_idf_vectors.csv", header = None, index = None)
+
+    #adding features as header
+    header = [(-1,-1,-1,-1)]
+    header.extend(feature_list)
+    pd.DataFrame(tf_idf_vectors).to_csv(directory_path + "vectors/tf_idf_vectors.csv", header = header, index = None)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create vector models.')
