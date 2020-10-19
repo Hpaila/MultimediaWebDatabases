@@ -8,3 +8,4 @@ To run:
 ```code/task0b.py --gestures_dir data/ --output_dir outputs/```
 
 
+```python code/task1.py --output_dir outputs/ --vector_model tf --k 10 --type 3```
