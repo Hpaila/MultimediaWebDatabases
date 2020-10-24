@@ -134,11 +134,11 @@ if __name__ == '__main__':
     vectors_df = None   
     if args.vector_model == "tf":
         vectors_df = pd.read_csv(args.output_dir + "vectors/tf_vectors.csv")
-        csv="vectors/tf_vectors_2.csv"
+        csv1 = "vectors/tf_vectors_2.csv"
         #print(len(vectors_df.columns))
     elif args.vector_model == "tf_idf":
         vectors_df = pd.read_csv(args.output_dir + "vectors/tf_idf_vectors.csv")
-        csv="vectors/tf_idf_vectors_2.csv"
+        csv1 = "vectors/tf_idf_vectors_2.csv"
 
     vectors = np.array(vectors_df)
 
@@ -167,53 +167,53 @@ if __name__ == '__main__':
 
     elif args.type == 2:
         print("pca")
-        pca = joblib.load(args.output_dir+"pca.sav")
-        gesture_vector_df = pd.read_csv(args.output_dir + csv)
+        pca = joblib.load(args.output_dir + args.vector_model + "_pca.sav")
+        gesture_vector_df = pd.read_csv(args.output_dir + csv1)
         gesture_vector = np.array(gesture_vector_df)
         #print(gesture_vector[0:,1:])
         # saving the model, so that it can be used in future tasks to transform the query gesture
         latent_vectors = pca.transform(gesture_vector[0:,1:])
         #latent_vectors = np.hstack((gesture_vector[0][0], latent_vectors))
-        vectors_df = pd.read_csv(args.output_dir + "pca_vectors.csv")
+        vectors_df = pd.read_csv(args.output_dir + args.vector_model + "_pca_vectors.csv")
         vectors = np.array(vectors_df)
         similar_distance(vectors)
 
     elif args.type==3:
         print("svd")
-        pca = joblib.load(args.output_dir+"svd.sav") 
-        gesture_vector_df = pd.read_csv(args.output_dir + csv)
+        pca = joblib.load(args.output_dir + args.vector_model + "_svd.sav") 
+        gesture_vector_df = pd.read_csv(args.output_dir + csv1)
         gesture_vector = np.array(gesture_vector_df)
         #print(gesture_vector[0:,1:])
         # saving the model, so that it can be used in future tasks to transform the query gesture
         latent_vectors = pca.transform(gesture_vector[0:,1:])
         #latent_vectors = np.hstack((gesture_vector[0][0], latent_vectors))
-        vectors_df = pd.read_csv(args.output_dir + "svd_vectors.csv")
+        vectors_df = pd.read_csv(args.output_dir + args.vector_model + "_svd_vectors.csv")
         vectors = np.array(vectors_df)
         similar_distance(vectors)
 
     elif args.type==4:
         print("nmf")
-        pca = joblib.load(args.output_dir+"nmf.sav") 
-        gesture_vector_df = pd.read_csv(args.output_dir + csv)
+        pca = joblib.load(args.output_dir + args.vector_model + "_nmf.sav") 
+        gesture_vector_df = pd.read_csv(args.output_dir + csv1)
         gesture_vector = np.array(gesture_vector_df)
         #print(gesture_vector[0:,1:])
         # saving the model, so that it can be used in future tasks to transform the query gesture
         latent_vectors = pca.transform(gesture_vector[0:,1:])
         #latent_vectors = np.hstack((gesture_vector[0][0], latent_vectors))
-        vectors_df = pd.read_csv(args.output_dir + "nmf_vectors.csv")
+        vectors_df = pd.read_csv(args.output_dir + args.vector_model + "_nmf_vectors.csv")
         vectors = np.array(vectors_df)
         similar_distance(vectors)
 
     elif args.type==5:
         print("lda")
-        pca = joblib.load(args.output_dir+"lda.sav") 
-        gesture_vector_df = pd.read_csv(args.output_dir + csv)
+        pca = joblib.load(args.output_dir + args.vector_model + "_lda.sav") 
+        gesture_vector_df = pd.read_csv(args.output_dir + csv1)
         gesture_vector = np.array(gesture_vector_df)
         #print(gesture_vector[0:,1:])
         # saving the model, so that it can be used in future tasks to transform the query gesture
         latent_vectors = pca.transform(gesture_vector[0:,1:])
         #latent_vectors = np.hstack((gesture_vector[0][0], latent_vectors))
-        vectors_df = pd.read_csv(args.output_dir + "lda_vectors.csv")
+        vectors_df = pd.read_csv(args.output_dir + args.vector_model + "_lda_vectors.csv")
         vectors = np.array(vectors_df)
         similar_distance(vectors)
 
