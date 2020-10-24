@@ -96,7 +96,7 @@ if __name__ == '__main__':
     if args.type == "svd":
         svd = TruncatedSVD(n_components=args.p)
         latent_gestures = svd.fit_transform(similarity_matrix)
-        top_p_latent_gestures_scores = open(args.output_dir + "top_p_latent_gestures_scores_svd", "w")
+        top_p_latent_gestures_scores = open(args.output_dir + "top_p_latent_gestures_scores_svd_" + str(args.user_option), "w")
         
         for row in svd.components_:
             zipped = sorted(zip(row, gesture_names), reverse=True)
@@ -106,7 +106,7 @@ if __name__ == '__main__':
     elif args.type == "nmf":
         nmf = NMF(n_components=args.p)
         latent_gestures = nmf.fit_transform(similarity_matrix)
-        top_p_latent_gestures_scores = open(args.output_dir + "top_p_latent_gestures_scores_nmf", "w")
+        top_p_latent_gestures_scores = open(args.output_dir + "top_p_latent_gestures_scores_nmf_" + str(args.user_option), "w")
         
         for row in nmf.components_:
             zipped = sorted(zip(row, gesture_names), reverse=True)
