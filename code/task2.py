@@ -242,7 +242,7 @@ if __name__ == '__main__':
             if file_name.endswith(".csv"):
                 sequences = get_sequences(words_dir_path + file_name, "dtw")
                 distances[file_name] = get_dtw_distance(sequences["W"], query_sequences["W"]) + get_dtw_distance(sequences["X"], query_sequences["X"]) + get_dtw_distance(sequences["Y"], query_sequences["Y"]) + get_dtw_distance(sequences["Z"], query_sequences["Z"])
-                print(distances[file_name])
+                # print(distances[file_name])
 
         sorted_distances = sorted(distances.items(), key=lambda x: x[1])
         for i in range(0,10):
