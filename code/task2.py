@@ -4,6 +4,9 @@ import numpy as np
 import pandas as pd
 import csv
 import glob
+import joblib
+from sklearn.decomposition import PCA, TruncatedSVD, LatentDirichletAllocation, NMF
+from scipy.spatial import distance
 
 #This is the total number of unique features in our dataset, so our vector size will be this for every database object or query object
 feature_dict = set()
@@ -87,7 +90,7 @@ def create_tf_idf_vectors(directory_path, gestures_dir, feature_list,column_head
     header = column_header
     pd.DataFrame(tf_idf_vectors).to_csv(directory_path + "vectors/tf_idf_vectors_2.csv", header = header, index = None)
 
-def similargestures(csv):
+def similar_gestures(csv):
             gesture_vector_df = pd.read_csv(args.output_dir + csv)
             gesture_vector = np.array(gesture_vector_df)
             dot_products={}
@@ -96,6 +99,15 @@ def similargestures(csv):
             sort_orders = sorted(dot_products.items(), key=lambda x: x[1], reverse=True)
             for i in range(0,10):
                     print(sort_orders[i])
+
+def similar_distance(vectors):       
+        distances={}
+        for v in vectors:
+                distances[v[0]]=distance.euclidean(latent_vectors[0],v[1:])
+        sort_orders = sorted(distances.items(), key=lambda x: x[1])
+        for i in range(0,10):
+                    print(sort_orders[i])
+        
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create vector models.')
     parser.add_argument('--gesture', help='gesture file', required=True)
@@ -108,9 +120,11 @@ if __name__ == '__main__':
     vectors_df = None   
     if args.vector_model == "tf":
         vectors_df = pd.read_csv(args.output_dir + "vectors/tf_vectors.csv")
+        csv="vectors/tf_vectors_2.csv"
         #print(len(vectors_df.columns))
     elif args.vector_model == "tf_idf":
         vectors_df = pd.read_csv(args.output_dir + "vectors/tf_idf_vectors.csv")
+        csv="vectors/tf_idf_vectors_2.csv"
 
     vectors = np.array(vectors_df)
 
@@ -131,11 +145,65 @@ if __name__ == '__main__':
         create_tf_vectors(args.output_dir, feature_list,vectors_df.columns)
         #create_tf_idf_vectors(args.output_dir, args.gestures_dir, feature_list)
         if args.vector_model == "tf":
-            similargestures("vectors/tf_vectors_2.csv")
+            similar_gestures("vectors/tf_vectors_2.csv")
             
         else:
             create_tf_idf_vectors(args.output_dir, args.gestures_dir, feature_list,vectors_df.columns)
-            similargestures("vectors/tf_idf_vectors_2.csv")
+            similar_gestures("vectors/tf_idf_vectors_2.csv")
 
-            
+    elif args.type == 2:
+        print("pca")
+        pca = joblib.load(args.output_dir+"pca.sav")
+        gesture_vector_df = pd.read_csv(args.output_dir + csv)
+        gesture_vector = np.array(gesture_vector_df)
+        #print(gesture_vector[0:,1:])
+        # saving the model, so that it can be used in future tasks to transform the query gesture
+        latent_vectors = pca.transform(gesture_vector[0:,1:])
+        #latent_vectors = np.hstack((gesture_vector[0][0], latent_vectors))
+        vectors_df = pd.read_csv(args.output_dir + "pca_vectors.csv")
+        vectors = np.array(vectors_df)
+        similar_distance(vectors)
+
+    elif args.type==3:
+        print("svd")
+        pca = joblib.load(args.output_dir+"svd.sav") 
+        gesture_vector_df = pd.read_csv(args.output_dir + csv)
+        gesture_vector = np.array(gesture_vector_df)
+        #print(gesture_vector[0:,1:])
+        # saving the model, so that it can be used in future tasks to transform the query gesture
+        latent_vectors = pca.transform(gesture_vector[0:,1:])
+        #latent_vectors = np.hstack((gesture_vector[0][0], latent_vectors))
+        vectors_df = pd.read_csv(args.output_dir + "svd_vectors.csv")
+        vectors = np.array(vectors_df)
+        similar_distance(vectors)
+
+    elif args.type==4:
+        print("nmf")
+        pca = joblib.load(args.output_dir+"nmf.sav") 
+        gesture_vector_df = pd.read_csv(args.output_dir + csv)
+        gesture_vector = np.array(gesture_vector_df)
+        #print(gesture_vector[0:,1:])
+        # saving the model, so that it can be used in future tasks to transform the query gesture
+        latent_vectors = pca.transform(gesture_vector[0:,1:])
+        #latent_vectors = np.hstack((gesture_vector[0][0], latent_vectors))
+        vectors_df = pd.read_csv(args.output_dir + "nmf_vectors.csv")
+        vectors = np.array(vectors_df)
+        similar_distance(vectors)
+
+    elif args.type==5:
+        print("lda")
+        pca = joblib.load(args.output_dir+"lda.sav") 
+        gesture_vector_df = pd.read_csv(args.output_dir + csv)
+        gesture_vector = np.array(gesture_vector_df)
+        #print(gesture_vector[0:,1:])
+        # saving the model, so that it can be used in future tasks to transform the query gesture
+        latent_vectors = pca.transform(gesture_vector[0:,1:])
+        #latent_vectors = np.hstack((gesture_vector[0][0], latent_vectors))
+        vectors_df = pd.read_csv(args.output_dir + "lda_vectors.csv")
+        vectors = np.array(vectors_df)
+        similar_distance(vectors)
+
+    
+        
+        
 
