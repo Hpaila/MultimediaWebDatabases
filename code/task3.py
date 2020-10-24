@@ -100,7 +100,8 @@ if __name__ == '__main__':
         
         for row in svd.components_:
             zipped = sorted(zip(row, gesture_names), reverse=True)
-            top_p_latent_gestures_scores.write(str(zipped) + "\n")
+            str_zipped = [str(tup) for tup in zipped]
+            top_p_latent_gestures_scores.write(",".join(str_zipped) + "\n")
         top_p_latent_gestures_scores.close()
 
     elif args.type == "nmf":
@@ -110,6 +111,7 @@ if __name__ == '__main__':
         
         for row in nmf.components_:
             zipped = sorted(zip(row, gesture_names), reverse=True)
-            top_p_latent_gestures_scores.write(str(zipped) + "\n")
+            str_zipped = [str(tup) for tup in zipped]
+            top_p_latent_gestures_scores.write(",".join(str_zipped) + "\n")
         top_p_latent_gestures_scores.close()       
         
