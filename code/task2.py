@@ -7,6 +7,8 @@ import glob
 import joblib
 from sklearn.decomposition import PCA, TruncatedSVD, LatentDirichletAllocation, NMF
 from scipy.spatial import distance
+from sequence_utils import get_edit_distance, get_dtw_distance
+import time
 
 #This is the total number of unique features in our dataset, so our vector size will be this for every database object or query object
 feature_dict = set()
@@ -107,7 +109,19 @@ def similar_distance(vectors):
         sort_orders = sorted(distances.items(), key=lambda x: x[1])
         for i in range(0,10):
                     print(sort_orders[i])
-        
+
+def get_sequences(file_path, type):
+    sequences = {}
+    words = np.array(pd.read_csv(file_path, header = None))
+    for row in words:
+        if row[0] not in sequences:
+            sequences[row[0]] = []
+        if type == "edit":
+            sequences[row[0]].append(tuple(row[6:]))
+        elif type == "dtw":
+            sequences[row[0]].append(row[5])
+    return sequences
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create vector models.')
     parser.add_argument('--gesture', help='gesture file', required=True)
@@ -120,29 +134,22 @@ if __name__ == '__main__':
     vectors_df = None   
     if args.vector_model == "tf":
         vectors_df = pd.read_csv(args.output_dir + "vectors/tf_vectors.csv")
-        csv="vectors/tf_vectors_2.csv"
+        csv1 = "vectors/tf_vectors_2.csv"
         #print(len(vectors_df.columns))
     elif args.vector_model == "tf_idf":
         vectors_df = pd.read_csv(args.output_dir + "vectors/tf_idf_vectors.csv")
-        csv="vectors/tf_idf_vectors_2.csv"
+        csv1 = "vectors/tf_idf_vectors_2.csv"
 
     vectors = np.array(vectors_df)
+    words_dir_path = args.output_dir + "words/"
+    process_word_file(words_dir_path, args.gesture)        
+    #print(len(feature_dict))
+    feature_list = list(feature_dict)
+    feature_list.sort()
+    create_tf_vectors(args.output_dir, feature_list,vectors_df.columns)
 
     if args.type == 1:
-        print("dot product:")
-        words_dir_path = args.output_dir + "words/"
-        process_word_file(words_dir_path, args.gesture)        
-        #print(len(feature_dict))
-        feature_list = list(feature_dict)
-        feature_list.sort()
-        
-        #creating vectors directory
-        try:
-            os.mkdir(args.output_dir + "vectors/")
-        except OSError as error:
-            print("vectors directory already exists")
-
-        create_tf_vectors(args.output_dir, feature_list,vectors_df.columns)
+        print("dot product:")    
         #create_tf_idf_vectors(args.output_dir, args.gestures_dir, feature_list)
         if args.vector_model == "tf":
             similar_gestures("vectors/tf_vectors_2.csv")
@@ -153,57 +160,83 @@ if __name__ == '__main__':
 
     elif args.type == 2:
         print("pca")
-        pca = joblib.load(args.output_dir+"pca.sav")
-        gesture_vector_df = pd.read_csv(args.output_dir + csv)
+        pca = joblib.load(args.output_dir + args.vector_model + "_pca.sav")
+        gesture_vector_df = pd.read_csv(args.output_dir + csv1)
         gesture_vector = np.array(gesture_vector_df)
         #print(gesture_vector[0:,1:])
         # saving the model, so that it can be used in future tasks to transform the query gesture
         latent_vectors = pca.transform(gesture_vector[0:,1:])
         #latent_vectors = np.hstack((gesture_vector[0][0], latent_vectors))
-        vectors_df = pd.read_csv(args.output_dir + "pca_vectors.csv")
+        vectors_df = pd.read_csv(args.output_dir + args.vector_model + "_pca_vectors.csv")
         vectors = np.array(vectors_df)
         similar_distance(vectors)
 
     elif args.type==3:
         print("svd")
-        pca = joblib.load(args.output_dir+"svd.sav") 
-        gesture_vector_df = pd.read_csv(args.output_dir + csv)
+        pca = joblib.load(args.output_dir + args.vector_model + "_svd.sav") 
+        gesture_vector_df = pd.read_csv(args.output_dir + csv1)
         gesture_vector = np.array(gesture_vector_df)
         #print(gesture_vector[0:,1:])
         # saving the model, so that it can be used in future tasks to transform the query gesture
         latent_vectors = pca.transform(gesture_vector[0:,1:])
         #latent_vectors = np.hstack((gesture_vector[0][0], latent_vectors))
-        vectors_df = pd.read_csv(args.output_dir + "svd_vectors.csv")
+        vectors_df = pd.read_csv(args.output_dir + args.vector_model + "_svd_vectors.csv")
         vectors = np.array(vectors_df)
         similar_distance(vectors)
 
     elif args.type==4:
         print("nmf")
-        pca = joblib.load(args.output_dir+"nmf.sav") 
-        gesture_vector_df = pd.read_csv(args.output_dir + csv)
+        pca = joblib.load(args.output_dir + args.vector_model + "_nmf.sav") 
+        gesture_vector_df = pd.read_csv(args.output_dir + csv1)
         gesture_vector = np.array(gesture_vector_df)
         #print(gesture_vector[0:,1:])
         # saving the model, so that it can be used in future tasks to transform the query gesture
         latent_vectors = pca.transform(gesture_vector[0:,1:])
         #latent_vectors = np.hstack((gesture_vector[0][0], latent_vectors))
-        vectors_df = pd.read_csv(args.output_dir + "nmf_vectors.csv")
+        vectors_df = pd.read_csv(args.output_dir + args.vector_model + "_nmf_vectors.csv")
         vectors = np.array(vectors_df)
         similar_distance(vectors)
 
     elif args.type==5:
         print("lda")
-        pca = joblib.load(args.output_dir+"lda.sav") 
-        gesture_vector_df = pd.read_csv(args.output_dir + csv)
+        pca = joblib.load(args.output_dir + args.vector_model + "_lda.sav") 
+        gesture_vector_df = pd.read_csv(args.output_dir + csv1)
         gesture_vector = np.array(gesture_vector_df)
         #print(gesture_vector[0:,1:])
         # saving the model, so that it can be used in future tasks to transform the query gesture
         latent_vectors = pca.transform(gesture_vector[0:,1:])
         #latent_vectors = np.hstack((gesture_vector[0][0], latent_vectors))
-        vectors_df = pd.read_csv(args.output_dir + "lda_vectors.csv")
+        vectors_df = pd.read_csv(args.output_dir + args.vector_model + "_lda_vectors.csv")
         vectors = np.array(vectors_df)
         similar_distance(vectors)
 
-    
-        
-        
+    elif args.type == 6:
+        # start_time = time.time()
+        distances = {}
+        words_dir_path = args.output_dir + "words/"
+        files = os.listdir(words_dir_path)
+        query_sequences = get_sequences(words_dir_path + args.gesture, "edit")
+        for file_name in files:
+            if file_name.endswith(".csv"):
+                sequences = get_sequences(words_dir_path + file_name, "edit")
+                distances[file_name] = get_edit_distance(sequences["W"], query_sequences["W"]) + get_edit_distance(sequences["X"], query_sequences["X"]) + get_edit_distance(sequences["Y"], query_sequences["Y"]) + get_edit_distance(sequences["Z"], query_sequences["Z"])
 
+        sorted_distances = sorted(distances.items(), key=lambda x: x[1])
+        for i in range(0,10):
+                print(sorted_distances[i])
+        # print(time.time() - start_time)
+
+    elif args.type == 7:
+        distances = {}
+        words_dir_path = args.output_dir + "words/"
+        files = os.listdir(words_dir_path)
+        query_sequences = get_sequences(words_dir_path + args.gesture, "dtw")
+        for file_name in files:
+            if file_name.endswith(".csv"):
+                sequences = get_sequences(words_dir_path + file_name, "dtw")
+                distances[file_name] = get_dtw_distance(sequences["W"], query_sequences["W"]) + get_dtw_distance(sequences["X"], query_sequences["X"]) + get_dtw_distance(sequences["Y"], query_sequences["Y"]) + get_dtw_distance(sequences["Z"], query_sequences["Z"])
+                # print(distances[file_name])
+
+        sorted_distances = sorted(distances.items(), key=lambda x: x[1])
+        for i in range(0,10):
+                print(sorted_distances[i])
