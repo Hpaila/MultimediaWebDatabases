@@ -45,9 +45,7 @@ if __name__ == '__main__':
 
     # a = np.array([[1,2],[3,4],[5,6]])
     # print(a.dot(a.T))
-    a = [1,2,3]
-    b = [2,3,4]
-    print()
+
     #Get the similarity matrix based on the user option
     if args.user_option == "dot_product":
         vectors = np.array(pd.read_csv(args.output_dir + "vectors/" + args.vector_model + "_vectors.csv"))
@@ -57,7 +55,8 @@ if __name__ == '__main__':
     elif args.user_option == "pca" or args.user_option == "svd" or args.user_option == "nmf" or args.user_option == "lda":
         vectors = np.array(pd.read_csv(args.output_dir + args.vector_model + "_" + args.user_option + "_vectors.csv", header = None))
         # distance_matrix = distance_matrix(vectors[0:,1:], vectors[0:, 1:])
-        distance_matrix = cdist(vectors[0:,1:], vectors[0:, 1:], metric = "euclidean")
+        #TODO change this to euclidean if nan values
+        distance_matrix = cdist(vectors[0:,1:], vectors[0:, 1:], metric = "mahalanobis")
         similarity_matrix = 1 / (1 + distance_matrix)
         gesture_names = np.squeeze(vectors[0:,:1].T).tolist()
         
@@ -109,7 +108,8 @@ if __name__ == '__main__':
         similarity_matrix = 1 / (1 + similarity_matrix)
 
     # print(similarity_matrix)
-    similarity_matrix = np.divide(similarity_matrix - similarity_matrix.min(), similarity_matrix.max() - similarity_matrix.min(), out = similarity_matrix)
+    #TODO do we enable normalization or not??
+    # similarity_matrix = np.divide(similarity_matrix - similarity_matrix.min(), similarity_matrix.max() - similarity_matrix.min(), out = similarity_matrix)
     similarity_matrix_with_headers = np.hstack((np.array(gesture_names).reshape(-1,1), similarity_matrix))
     header = gesture_names
     header.insert(0, "Nothing")

@@ -5,6 +5,7 @@ from copy import deepcopy
 
 from scipy.sparse import csr_matrix
 from sklearn.cluster import KMeans
+from scipy.spatial import distance
 
 def partition_gestures_into_p_groups(svd_or_nmf_type):
     with open(args.output_dir + "top_p_latent_gestures_scores_" + svd_or_nmf_type + "_" + str(args.user_option)) as f:
@@ -27,15 +28,13 @@ def partition_gestures_into_p_groups(svd_or_nmf_type):
     
     return partition_map
 
-def perform_laplacian_spectral_clustering(similarity_matrix, num_of_clusters, user_option):
-    threshold = 0.91
-    if user_option == 1:
-        threshold = 0.0015
-
+def perform_laplacian_spectral_clustering(similarity_matrix, num_of_clusters):
+    threshold = np.median(similarity_matrix)
+    # print("rahul", similarity_matrix.max(), similarity_matrix.min())
     vectorizer = np.vectorize(lambda x: 1 if x > threshold else 0)
     W = np.vectorize(vectorizer)(similarity_matrix)
-    print(W)
-    D = np.diag(np.sum(np.array(csr_matrix(W).todense()), axis=1))
+    # print(W)
+    D = np.diag(np.sum(np.array(csr_matrix(W).todense()), axis = 1))
     # print('degree matrix:')
     # print(D)
     
@@ -45,13 +44,8 @@ def perform_laplacian_spectral_clustering(similarity_matrix, num_of_clusters, us
 
     eigen_values, eigen_vectors = np.linalg.eig(L)
 
-    i = np.where(eigen_values < 0.5)[0]
-
-    km = KMeans(init='k-means++', n_clusters=5)
-    km.fit(eigen_vectors)
-    print(km.labels_)
+    return k_means_clustering(eigen_vectors, num_of_clusters)
     
-
 
 def k_means_clustering(data, number_of_clusters):
     n = data.shape[0]  # Number of training data
@@ -60,24 +54,58 @@ def k_means_clustering(data, number_of_clusters):
     centers_old_index = np.random.randint(n, size=number_of_clusters)
     for i in range(number_of_clusters):
         centers_old = data[centers_old_index]
+
     centers_new = np.zeros(centers_old.shape)
     distances = np.zeros((n, number_of_clusters))
 
-    while (centers_old != centers_new).all():
+    error = np.linalg.norm(centers_new - centers_old)
+    prev_error = None
+    for i in range(100):
+        prev_error = error
         for i in range(number_of_clusters):
-            distances[:, i] = np.linalg.norm(data - centers_old[i], axis=1)
-        clusters = np.argmin(distances, axis=1)
-        print("clusters ", clusters)
+            distances[:, i] = np.linalg.norm(data - centers_old[i], axis = 1)
+        clusters = np.argmin(distances, axis = 1)
+        # print("clusters ", clusters)
         centers_old = deepcopy(centers_new)
         for i in range(number_of_clusters):
-            centers_new[i] = np.mean(data[clusters == i], axis=0)
-    print(centers_new)
+            if len(data[clusters == i]) != 0:
+                centers_new[i] = np.mean(data[clusters == i], axis = 0)
+            else:
+                centers_new[i] = np.zeros(c)
+        error = np.linalg.norm(centers_new - centers_old)
+    # print(clusters)
+    return clusters
 
-
+def kmeans(X,k=3,max_iterations=100):
+    '''
+    X: multidimensional data
+    k: number of clusters
+    max_iterations: number of repetitions before clusters are established
+    
+    Steps:
+    1. Convert data to numpy aray
+    2. Pick indices of k random point without replacement
+    3. Find class (P) of each data point using euclidean distance
+    4. Stop when max_iteration are reached of P matrix doesn't change
+    
+    Return:
+    np.array: containg class of each data point
+    '''
+    if isinstance(X, pd.DataFrame):X = X.values
+    idx = np.random.choice(len(X), k, replace=False)
+    centroids = X[idx, :]
+    P = np.argmin(distance.cdist(X, centroids, 'euclidean'),axis=1)
+    for _ in range(max_iterations):
+        centroids = np.vstack([X[P==i,:].mean(axis=0) for i in range(k)])
+        tmp = np.argmin(distance.cdist(X, centroids, 'euclidean'),axis=1)
+        if np.array_equal(P,tmp):break
+        P = tmp
+    return P
+    
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create vector models.')
     parser.add_argument('--output_dir', help='output directory', required=True)
-    parser.add_argument('--user_option', type=int, help='user option', required=True)
+    parser.add_argument('--user_option', help='user option', required=True)
     parser.add_argument('--p', type=int, help='Number of clusters', required=True)
     args = parser.parse_args()
 
@@ -88,8 +116,26 @@ if __name__ == '__main__':
     # print(partition_gestures_into_p_groups("nmf"))
 
     # Laplacian spectral clustering
-    similarity_matrix_with_headers = np.array(pd.read_csv(args.output_dir + "similarity_matrix_" + str(args.user_option) + ".csv", header=None))
+    similarity_matrix_with_headers = np.array(pd.read_csv(args.output_dir + "similarity_matrix_" + args.user_option + ".csv", header=None))
     similarity_matrix = np.array(similarity_matrix_with_headers[1:, 1:], dtype=float)
-    perform_laplacian_spectral_clustering(similarity_matrix, args.p)
-    k_means_clustering(similarity_matrix, args.p)
+    # clusters = perform_laplacian_spectral_clustering(similarity_matrix, args.p)
+    clusters = k_means_clustering(similarity_matrix, args.p) 
 
+    # clusters = kmeans(similarity_matrix, k = args.p)
+    gestures_list = similarity_matrix_with_headers[0][1:]
+
+    # for i in range(args.p):
+    #     print("\nCluster ", i)
+    #     indexes = np.where(clusters == i)[0]
+    #     for index in indexes:
+    #         print(gestures_list[index])
+    
+    # km = KMeans(init="random", n_clusters=args.p)
+    # km.fit(similarity_matrix)
+    # print(km.labels_)
+
+    # for i in range(args.p):
+    #     print("\nCluster ", i)
+    #     indexes = np.where(km.labels_ == i)[0]
+    #     for index in indexes:
+    #         print(gestures_list[index])

@@ -140,13 +140,13 @@ if __name__ == '__main__':
     feature_list = list(feature_dict)
     feature_list.sort()
     create_query_tf_vector(args.output_dir, feature_list,vectors_df.columns)
-
+    create_query_tf_idf_vector(args.query_output_dir, args.output_dir+"words/", feature_list, vectors_df.columns)
+    
     if args.user_option == "dot_product":
         print("dot product:")    
         if args.vector_model == "tf":
             similar_gestures("vectors/query_tf_vector.csv")
         else:
-            create_query_tf_idf_vector(args.query_output_dir, args.output_dir+"words/", feature_list, vectors_df.columns)
             similar_gestures("vectors/query_tf_idf_vector.csv")
 
     elif args.user_option == "pca" or args.user_option == "svd" or args.user_option == "nmf" or args.user_option == "lda":
