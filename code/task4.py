@@ -1,8 +1,13 @@
 import argparse
 import numpy as np
 import pandas as pd
+<<<<<<< HEAD
 from copy import deepcopy
 
+=======
+from scipy.sparse import csr_matrix
+from sklearn.cluster import KMeans
+>>>>>>> task4b partial changes
 
 def partition_gestures_into_p_groups(svd_or_nmf_type):
     with open(args.output_dir + "top_p_latent_gestures_scores_" + svd_or_nmf_type + "_" + str(args.user_option)) as f:
@@ -25,8 +30,30 @@ def partition_gestures_into_p_groups(svd_or_nmf_type):
     
     return partition_map
 
-def perform_laplacian_spectral_clustering(similarity_matrix, num_of_clusters):
-    pass
+def perform_laplacian_spectral_clustering(similarity_matrix, num_of_clusters, user_option):
+    threshold = 0.91
+    if user_option == 1:
+        threshold = 0.0015
+
+    vectorizer = np.vectorize(lambda x: 1 if x > threshold else 0)
+    W = np.vectorize(vectorizer)(similarity_matrix)
+    print(W)
+    D = np.diag(np.sum(np.array(csr_matrix(W).todense()), axis=1))
+    # print('degree matrix:')
+    # print(D)
+    
+    L = D - W
+    # print('laplacian matrix:')
+    # print(L)
+
+    eigen_values, eigen_vectors = np.linalg.eig(L)
+
+    i = np.where(eigen_values < 0.5)[0]
+
+    km = KMeans(init='k-means++', n_clusters=5)
+    km.fit(eigen_vectors)
+    print(km.labels_)
+    
 
 
 def k_means_clustering(data, number_of_clusters):
@@ -65,9 +92,7 @@ if __name__ == '__main__':
 
     # Laplacian spectral clustering
     similarity_matrix_with_headers = np.array(pd.read_csv(args.output_dir + "similarity_matrix_" + str(args.user_option) + ".csv", header=None))
-    similarity_matrix = similarity_matrix_with_headers[1:, 1:]
+    similarity_matrix = np.array(similarity_matrix_with_headers[1:, 1:], dtype=float)
     perform_laplacian_spectral_clustering(similarity_matrix, args.p)
-    print(partition_gestures_into_p_groups("nmf"))
-
     k_means_clustering(similarity_matrix, args.p)
 
