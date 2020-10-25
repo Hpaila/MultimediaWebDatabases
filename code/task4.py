@@ -1,13 +1,10 @@
 import argparse
 import numpy as np
 import pandas as pd
-<<<<<<< HEAD
 from copy import deepcopy
 
-=======
 from scipy.sparse import csr_matrix
 from sklearn.cluster import KMeans
->>>>>>> task4b partial changes
 
 def partition_gestures_into_p_groups(svd_or_nmf_type):
     with open(args.output_dir + "top_p_latent_gestures_scores_" + svd_or_nmf_type + "_" + str(args.user_option)) as f:
