@@ -11,6 +11,6 @@ To run:
 
 ```python code/task2.py --query_word_file_name 2_words.csv --vector_model tf --output_dir outputs/ --query_output_dir outputs/ --user_option pca```
 
-``` python code/task3.py --vector_model tf --output_dir outputs/ --user_option 1 --p 10 --type svd ```
+``` python code/task3.py --vector_model tf --output_dir outputs/ --user_option pca --p 10 --type svd ```
 
-``` python code/task4.py --output_dir outputs/ --user_option 1 ```
+``` python code/task4.py --output_dir outputs/ --user_option pca --p 3 ```
