@@ -39,9 +39,9 @@ def process_word_file(directory_path, file_name):
             words_in_object_map[file_name][word] = 0
         words_in_object_map[file_name][word] += 1
 
-def create_tf_vectors(directory_path, feature_list, column_header):
+def create_query_tf_vector(directory_path, feature_list, column_header):
     #Creating TF vectors
-    tf_vector_output_file = open(directory_path + "vectors/tf_vectors_2.csv", "w")
+    tf_vector_output_file = open(directory_path + "vectors/query_tf_vector.csv", "w")
     csv_write = csv.writer(tf_vector_output_file)
     header = column_header
     csv_write.writerow(header)
@@ -57,9 +57,8 @@ def create_tf_vectors(directory_path, feature_list, column_header):
     tf_vector_output_file.close()
     print(len(tf_vector))
 
-
-def create_tf_idf_vectors(directory_path, gestures_dir, feature_list,column_header):
-    number_of_files = get_number_of_gesture_files_in_dir(gestures_dir + "W/")
+def create_query_tf_idf_vector(directory_path, words_dir_path, feature_list, column_header):
+    number_of_files = get_number_of_gesture_files_in_dir(words_dir_path)
     print(number_of_files)
 
     words_dir_path = args.output_dir + "words/"
@@ -78,7 +77,7 @@ def create_tf_idf_vectors(directory_path, gestures_dir, feature_list,column_head
         count_of_a_feature_in_object.append(count)
     
     #Creating TF-IDF vectors
-    tf_vectors = np.array(pd.read_csv(directory_path + "vectors/tf_vectors_2.csv"))
+    tf_vectors = np.array(pd.read_csv(directory_path + "vectors/query_tf_vector.csv"))
     idf_vector = np.array(count_of_a_feature_in_object)
     idf_vector = np.divide(number_of_files, idf_vector)
     idf_vector = np.log(idf_vector)
@@ -90,25 +89,24 @@ def create_tf_idf_vectors(directory_path, gestures_dir, feature_list,column_head
 
     #adding features as header
     header = column_header
-    pd.DataFrame(tf_idf_vectors).to_csv(directory_path + "vectors/tf_idf_vectors_2.csv", header = header, index = None)
+    pd.DataFrame(tf_idf_vectors).to_csv(directory_path + "vectors/query_tf_idf_vector.csv", header = header, index = None)
 
-def similar_gestures(csv):
-            gesture_vector_df = pd.read_csv(args.output_dir + csv)
-            gesture_vector = np.array(gesture_vector_df)
-            dot_products={}
-            for v in vectors:
-                dot_products[v[0]]=np.dot(gesture_vector[0][1:],v[1:])
-            sort_orders = sorted(dot_products.items(), key=lambda x: x[1], reverse=True)
-            for i in range(0,10):
-                    print(sort_orders[i])
+def similar_gestures(query_vector_path):
+    query_vector = np.array(pd.read_csv(args.query_output_dir + query_vector_path))
+    dot_products={}
+    for v in vectors:
+        dot_products[v[0]]=np.dot(query_vector[0][1:],v[1:])
+    sort_orders = sorted(dot_products.items(), key=lambda x: x[1], reverse=True)
+    for i in range(0,10):
+            print(sort_orders[i])
 
-def similar_distance(vectors):       
-        distances={}
-        for v in vectors:
-                distances[v[0]]=distance.euclidean(latent_vectors[0],v[1:])
-        sort_orders = sorted(distances.items(), key=lambda x: x[1])
-        for i in range(0,10):
-                    print(sort_orders[i])
+def similar_distance(vectors, query_latent_vector):       
+    distances={}
+    for v in vectors:
+        distances[v[0]]=distance.euclidean(query_latent_vector[0],v[1:])
+    sort_orders = sorted(distances.items(), key=lambda x: x[1])
+    for i in range(0,10):
+        print(sort_orders[i])
 
 def get_sequences(file_path, type):
     sequences = {}
@@ -124,98 +122,45 @@ def get_sequences(file_path, type):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create vector models.')
-    parser.add_argument('--gesture', help='gesture file', required=True)
+    parser.add_argument('--query_word_file_name', help='Query word file name', required=True)
     parser.add_argument('--vector_model', help='vector model', required=True)
     parser.add_argument('--output_dir', help='output directory', required=True)
-    parser.add_argument('--type', type=int, help='Type of dimensionality reduction', required=True)
-    parser.add_argument('--gestures_dir', help='gestures directory', required=True)  
+    parser.add_argument('--query_output_dir', help='query output directory', required=True)
+    parser.add_argument('--user_option', help='Type of dimensionality reduction', required=True)
     args = parser.parse_args()
-    
-    vectors_df = None   
-    if args.vector_model == "tf":
-        vectors_df = pd.read_csv(args.output_dir + "vectors/tf_vectors.csv")
-        csv1 = "vectors/tf_vectors_2.csv"
-        #print(len(vectors_df.columns))
-    elif args.vector_model == "tf_idf":
-        vectors_df = pd.read_csv(args.output_dir + "vectors/tf_idf_vectors.csv")
-        csv1 = "vectors/tf_idf_vectors_2.csv"
 
+    vectors_df = pd.read_csv(args.output_dir + "vectors/" + args.vector_model + "_vectors.csv")
     vectors = np.array(vectors_df)
+
     words_dir_path = args.output_dir + "words/"
-    process_word_file(words_dir_path, args.gesture)        
-    #print(len(feature_dict))
+    query_words_dir_path = args.query_output_dir + "words/"
+    process_word_file(query_words_dir_path, args.query_word_file_name)     
+
     feature_list = list(feature_dict)
     feature_list.sort()
-    create_tf_vectors(args.output_dir, feature_list,vectors_df.columns)
+    create_query_tf_vector(args.output_dir, feature_list,vectors_df.columns)
 
-    if args.type == 1:
+    if args.user_option == "dot_product":
         print("dot product:")    
-        #create_tf_idf_vectors(args.output_dir, args.gestures_dir, feature_list)
         if args.vector_model == "tf":
-            similar_gestures("vectors/tf_vectors_2.csv")
-            
+            similar_gestures("vectors/query_tf_vector.csv")
         else:
-            create_tf_idf_vectors(args.output_dir, args.gestures_dir, feature_list,vectors_df.columns)
-            similar_gestures("vectors/tf_idf_vectors_2.csv")
+            create_query_tf_idf_vector(args.query_output_dir, args.output_dir+"words/", feature_list, vectors_df.columns)
+            similar_gestures("vectors/query_tf_idf_vector.csv")
 
-    elif args.type == 2:
-        print("pca")
-        pca = joblib.load(args.output_dir + args.vector_model + "_pca.sav")
-        gesture_vector_df = pd.read_csv(args.output_dir + csv1)
-        gesture_vector = np.array(gesture_vector_df)
-        #print(gesture_vector[0:,1:])
-        # saving the model, so that it can be used in future tasks to transform the query gesture
-        latent_vectors = pca.transform(gesture_vector[0:,1:])
-        #latent_vectors = np.hstack((gesture_vector[0][0], latent_vectors))
-        vectors_df = pd.read_csv(args.output_dir + args.vector_model + "_pca_vectors.csv")
-        vectors = np.array(vectors_df)
-        similar_distance(vectors)
+    elif args.user_option == "pca" or args.user_option == "svd" or args.user_option == "nmf" or args.user_option == "lda":
+        print(args.user_option)
+        pca = joblib.load(args.output_dir + args.vector_model + "_" + args.user_option + ".sav")
+        query_vector = np.array(pd.read_csv(args.query_output_dir + "vectors/query_" + args.vector_model +"_vector.csv"))
+        query_latent_vector = pca.transform(query_vector[0:,1:])
+        vectors = np.array(pd.read_csv(args.output_dir + args.vector_model + "_" + args.user_option + "_vectors.csv", header = None))
+        similar_distance(vectors, query_latent_vector)
 
-    elif args.type==3:
-        print("svd")
-        pca = joblib.load(args.output_dir + args.vector_model + "_svd.sav") 
-        gesture_vector_df = pd.read_csv(args.output_dir + csv1)
-        gesture_vector = np.array(gesture_vector_df)
-        #print(gesture_vector[0:,1:])
-        # saving the model, so that it can be used in future tasks to transform the query gesture
-        latent_vectors = pca.transform(gesture_vector[0:,1:])
-        #latent_vectors = np.hstack((gesture_vector[0][0], latent_vectors))
-        vectors_df = pd.read_csv(args.output_dir + args.vector_model + "_svd_vectors.csv")
-        vectors = np.array(vectors_df)
-        similar_distance(vectors)
-
-    elif args.type==4:
-        print("nmf")
-        pca = joblib.load(args.output_dir + args.vector_model + "_nmf.sav") 
-        gesture_vector_df = pd.read_csv(args.output_dir + csv1)
-        gesture_vector = np.array(gesture_vector_df)
-        #print(gesture_vector[0:,1:])
-        # saving the model, so that it can be used in future tasks to transform the query gesture
-        latent_vectors = pca.transform(gesture_vector[0:,1:])
-        #latent_vectors = np.hstack((gesture_vector[0][0], latent_vectors))
-        vectors_df = pd.read_csv(args.output_dir + args.vector_model + "_nmf_vectors.csv")
-        vectors = np.array(vectors_df)
-        similar_distance(vectors)
-
-    elif args.type==5:
-        print("lda")
-        pca = joblib.load(args.output_dir + args.vector_model + "_lda.sav") 
-        gesture_vector_df = pd.read_csv(args.output_dir + csv1)
-        gesture_vector = np.array(gesture_vector_df)
-        #print(gesture_vector[0:,1:])
-        # saving the model, so that it can be used in future tasks to transform the query gesture
-        latent_vectors = pca.transform(gesture_vector[0:,1:])
-        #latent_vectors = np.hstack((gesture_vector[0][0], latent_vectors))
-        vectors_df = pd.read_csv(args.output_dir + args.vector_model + "_lda_vectors.csv")
-        vectors = np.array(vectors_df)
-        similar_distance(vectors)
-
-    elif args.type == 6:
+    elif args.user_option == "edit_distance":
         # start_time = time.time()
         distances = {}
-        words_dir_path = args.output_dir + "words/"
         files = os.listdir(words_dir_path)
-        query_sequences = get_sequences(words_dir_path + args.gesture, "edit")
+        query_sequences = get_sequences(query_words_dir_path + args.gesture, "edit")
         for file_name in files:
             if file_name.endswith(".csv"):
                 sequences = get_sequences(words_dir_path + file_name, "edit")
@@ -226,16 +171,14 @@ if __name__ == '__main__':
                 print(sorted_distances[i])
         # print(time.time() - start_time)
 
-    elif args.type == 7:
+    elif args.user_option == "dtw":
         distances = {}
-        words_dir_path = args.output_dir + "words/"
         files = os.listdir(words_dir_path)
-        query_sequences = get_sequences(words_dir_path + args.gesture, "dtw")
+        query_sequences = get_sequences(query_words_dir_path + args.gesture, "dtw")
         for file_name in files:
             if file_name.endswith(".csv"):
                 sequences = get_sequences(words_dir_path + file_name, "dtw")
                 distances[file_name] = get_dtw_distance(sequences["W"], query_sequences["W"]) + get_dtw_distance(sequences["X"], query_sequences["X"]) + get_dtw_distance(sequences["Y"], query_sequences["Y"]) + get_dtw_distance(sequences["Z"], query_sequences["Z"])
-                # print(distances[file_name])
 
         sorted_distances = sorted(distances.items(), key=lambda x: x[1])
         for i in range(0,10):
