@@ -4,6 +4,7 @@ Group project for CSE 515 @ Arizona State University
 
 To run:
 ```python code/task0a.py --gestures_dir data/ --window 3 --shift 3 --resolution 3```
+While executing task0a.py, input directory containing the gestures is data/, if you want to run on sample data use "--gestures_dir sample/"
 
 ```python code/task0b.py --output_dir outputs/```
 
