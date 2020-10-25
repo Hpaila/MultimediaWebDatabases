@@ -10,6 +10,9 @@ from scipy.spatial import distance
 from sequence_utils import get_edit_distance, get_dtw_distance
 import time
 from scipy.spatial import distance_matrix
+from scipy.spatial.distance import cdist
+
+NUM_SENSORS = 20
 
 def get_number_of_gesture_files_in_dir(directory_path):
     return len(glob.glob1(directory_path,"*.csv"))
@@ -18,46 +21,47 @@ def get_sequences(file_path, type):
     sequences = {}
     words = np.array(pd.read_csv(file_path, header = None))
     for row in words:
-        if row[0] not in sequences:
-            sequences[row[0]] = []
+        if (row[0], row[2]) not in sequences:
+            sequences[(row[0], row[2])] = []
         if type == "edit":
-            sequences[row[0]].append(tuple(row[6:]))
+            sequences[(row[0], row[2])].append(tuple(row[6:]))
         elif type == "dtw":
-            sequences[row[0]].append(row[5])
+            sequences[(row[0], row[2])].append(row[5])
     return sequences
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create vector models.')
     parser.add_argument('--vector_model', help='vector model', required=True)
     parser.add_argument('--output_dir', help='output directory', required=True)
-    parser.add_argument('--user_option', type=int, help='user option', required=True)
+    parser.add_argument('--user_option', help='user option', required=True)
     parser.add_argument('--p', type=int, help='Number of latent components', required=True)
     parser.add_argument('--type', help='svd or nmf', required=True)
     args = parser.parse_args()
 
     similarity_matrix = None
-    user_option_map = {2: "pca", 3: "svd", 4: "nmf", 5: "lda"}
 
     similarity_matrix_size = get_number_of_gesture_files_in_dir(args.output_dir + "words/")
     gesture_names = None
 
     # a = np.array([[1,2],[3,4],[5,6]])
     # print(a.dot(a.T))
-
+    a = [1,2,3]
+    b = [2,3,4]
+    print()
     #Get the similarity matrix based on the user option
-    if args.user_option == 1:
+    if args.user_option == "dot_product":
         vectors = np.array(pd.read_csv(args.output_dir + "vectors/" + args.vector_model + "_vectors.csv"))
         similarity_matrix = vectors[0:, 1:].dot(vectors[0:, 1:].T)
         gesture_names = np.squeeze(vectors[0:,:1].T).tolist()
-
-    elif args.user_option == 2 or args.user_option == 3 or args.user_option == 4 or args.user_option == 5:
-        vectors = np.array(pd.read_csv(args.output_dir + args.vector_model + "_" + user_option_map[args.user_option] + "_vectors.csv", header = None))
-        distance_matrix = distance_matrix(vectors[0:,1:], vectors[0:, 1:])
-        #TODO Need to change this to similarity matrix
+        
+    elif args.user_option == "pca" or args.user_option == "svd" or args.user_option == "nmf" or args.user_option == "lda":
+        vectors = np.array(pd.read_csv(args.output_dir + args.vector_model + "_" + args.user_option + "_vectors.csv", header = None))
+        # distance_matrix = distance_matrix(vectors[0:,1:], vectors[0:, 1:])
+        distance_matrix = cdist(vectors[0:,1:], vectors[0:, 1:], metric = "euclidean")
         similarity_matrix = 1 / (1 + distance_matrix)
         gesture_names = np.squeeze(vectors[0:,:1].T).tolist()
         
-    elif args.user_option == 6:
+    elif args.user_option == "edit_distance":
         similarity_matrix = [[-1 for x in range(similarity_matrix_size)] for x in range(similarity_matrix_size)] 
         words_dir_path = args.output_dir + "words/"
         files = os.listdir(words_dir_path)
@@ -68,15 +72,20 @@ if __name__ == '__main__':
                 row = gesture_names.index(file_name1)
                 col = gesture_names.index(file_name2)
                 if similarity_matrix[row][col] == -1:
+                    similarity_matrix[row][col] = 0
                     count += 1
                     if file_name1.endswith(".csv") and file_name2.endswith(".csv"):
                         sequences1 = get_sequences(words_dir_path + file_name1, "edit")
                         sequences2 = get_sequences(words_dir_path + file_name2, "edit")
-                        similarity_matrix[row][col] = get_edit_distance(sequences1["W"], sequences2["W"]) + get_edit_distance(sequences1["X"], sequences2["X"]) + get_edit_distance(sequences1["Y"], sequences2["Y"]) + get_edit_distance(sequences1["Z"], sequences2["Z"])
+                        for component in ['W', 'X', 'Y', 'Z']:
+                            for sensor_id in range(NUM_SENSORS):
+                                similarity_matrix[row][col] += get_edit_distance(sequences1[(component, sensor_id)], sequences2[(component, sensor_id)])
+                        # print(similarity_matrix[row][col])
                         similarity_matrix[col][row] = similarity_matrix[row][col]
+        similarity_matrix = np.array(similarity_matrix)
         similarity_matrix = 1 / (1 + similarity_matrix)
 
-    elif args.user_option == 7:
+    elif args.user_option == "dtw":
         similarity_matrix = [[-1 for x in range(similarity_matrix_size)] for x in range(similarity_matrix_size)] 
         words_dir_path = args.output_dir + "words/"
         files = os.listdir(words_dir_path)
@@ -87,14 +96,20 @@ if __name__ == '__main__':
                 row = gesture_names.index(file_name1)
                 col = gesture_names.index(file_name2)
                 if similarity_matrix[row][col] == -1:
+                    similarity_matrix[row][col] = 0
                     count += 1
                     if file_name1.endswith(".csv") and file_name2.endswith(".csv"):
                         sequences1 = get_sequences(words_dir_path + file_name1, "dtw")
                         sequences2 = get_sequences(words_dir_path + file_name2, "dtw")
-                        similarity_matrix[row][col] = get_dtw_distance(sequences1["W"], sequences2["W"]) + get_dtw_distance(sequences1["X"], sequences2["X"]) + get_dtw_distance(sequences1["Y"], sequences2["Y"]) + get_dtw_distance(sequences1["Z"], sequences2["Z"])
+                        for component in ['W', 'X', 'Y', 'Z']:
+                            for sensor_id in range(NUM_SENSORS):
+                                similarity_matrix[row][col] += get_dtw_distance(sequences1[(component, sensor_id)], sequences2[(component, sensor_id)])
                         similarity_matrix[col][row] = similarity_matrix[row][col]
+        similarity_matrix = np.array(similarity_matrix)
         similarity_matrix = 1 / (1 + similarity_matrix)
-        
+
+    # print(similarity_matrix)
+    similarity_matrix = np.divide(similarity_matrix - similarity_matrix.min(), similarity_matrix.max() - similarity_matrix.min(), out = similarity_matrix)
     similarity_matrix_with_headers = np.hstack((np.array(gesture_names).reshape(-1,1), similarity_matrix))
     header = gesture_names
     header.insert(0, "Nothing")
