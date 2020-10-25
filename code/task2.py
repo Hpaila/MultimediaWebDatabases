@@ -10,6 +10,7 @@ from scipy.spatial import distance
 from sequence_utils import get_edit_distance, get_dtw_distance
 import time
 
+NUM_SENSORS = 20
 #This is the total number of unique features in our dataset, so our vector size will be this for every database object or query object
 feature_dict = set()
 
@@ -112,12 +113,12 @@ def get_sequences(file_path, type):
     sequences = {}
     words = np.array(pd.read_csv(file_path, header = None))
     for row in words:
-        if row[0] not in sequences:
-            sequences[row[0]] = []
+        if (row[0], row[2]) not in sequences:
+            sequences[(row[0], row[2])] = []
         if type == "edit":
-            sequences[row[0]].append(tuple(row[6:]))
+            sequences[(row[0], row[2])].append(tuple(row[6:]))
         elif type == "dtw":
-            sequences[row[0]].append(row[5])
+            sequences[(row[0], row[2])].append(row[5])
     return sequences
 
 if __name__ == '__main__':
@@ -160,11 +161,14 @@ if __name__ == '__main__':
         # start_time = time.time()
         distances = {}
         files = os.listdir(words_dir_path)
-        query_sequences = get_sequences(query_words_dir_path + args.gesture, "edit")
+        query_sequences = get_sequences(query_words_dir_path + args.query_word_file_name, "edit")
         for file_name in files:
             if file_name.endswith(".csv"):
+                distances[file_name] = 0
                 sequences = get_sequences(words_dir_path + file_name, "edit")
-                distances[file_name] = get_edit_distance(sequences["W"], query_sequences["W"]) + get_edit_distance(sequences["X"], query_sequences["X"]) + get_edit_distance(sequences["Y"], query_sequences["Y"]) + get_edit_distance(sequences["Z"], query_sequences["Z"])
+                for component in ['W', 'X', 'Y', 'Z']:
+                    for sensor_id in range(NUM_SENSORS):
+                        distances[file_name] += get_edit_distance(sequences[(component, sensor_id)], query_sequences[(component, sensor_id)])
 
         sorted_distances = sorted(distances.items(), key=lambda x: x[1])
         for i in range(0,10):
@@ -174,11 +178,14 @@ if __name__ == '__main__':
     elif args.user_option == "dtw":
         distances = {}
         files = os.listdir(words_dir_path)
-        query_sequences = get_sequences(query_words_dir_path + args.gesture, "dtw")
+        query_sequences = get_sequences(query_words_dir_path + args.query_word_file_name, "dtw")
         for file_name in files:
+            distances[file_name] = 0
             if file_name.endswith(".csv"):
                 sequences = get_sequences(words_dir_path + file_name, "dtw")
-                distances[file_name] = get_dtw_distance(sequences["W"], query_sequences["W"]) + get_dtw_distance(sequences["X"], query_sequences["X"]) + get_dtw_distance(sequences["Y"], query_sequences["Y"]) + get_dtw_distance(sequences["Z"], query_sequences["Z"])
+                for component in ['W', 'X', 'Y', 'Z']:
+                    for sensor_id in range(NUM_SENSORS):
+                        distances[file_name] += get_dtw_distance(sequences[(component, sensor_id)], query_sequences[(component, sensor_id)])
 
         sorted_distances = sorted(distances.items(), key=lambda x: x[1])
         for i in range(0,10):
