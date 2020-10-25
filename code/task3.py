@@ -54,7 +54,7 @@ if __name__ == '__main__':
         vectors = np.array(pd.read_csv(args.output_dir + args.vector_model + "_" + user_option_map[args.user_option] + "_vectors.csv", header = None))
         distance_matrix = distance_matrix(vectors[0:,1:], vectors[0:, 1:])
         #TODO Need to change this to similarity matrix
-        similarity_matrix = distance_matrix
+        similarity_matrix = 1 / (1 + distance_matrix)
         gesture_names = np.squeeze(vectors[0:,:1].T).tolist()
         
     elif args.user_option == 6:
@@ -74,6 +74,8 @@ if __name__ == '__main__':
                         sequences2 = get_sequences(words_dir_path + file_name2, "edit")
                         similarity_matrix[row][col] = get_edit_distance(sequences1["W"], sequences2["W"]) + get_edit_distance(sequences1["X"], sequences2["X"]) + get_edit_distance(sequences1["Y"], sequences2["Y"]) + get_edit_distance(sequences1["Z"], sequences2["Z"])
                         similarity_matrix[col][row] = similarity_matrix[row][col]
+        similarity_matrix = 1 / (1 + similarity_matrix)
+
     elif args.user_option == 7:
         similarity_matrix = [[-1 for x in range(similarity_matrix_size)] for x in range(similarity_matrix_size)] 
         words_dir_path = args.output_dir + "words/"
@@ -91,7 +93,8 @@ if __name__ == '__main__':
                         sequences2 = get_sequences(words_dir_path + file_name2, "dtw")
                         similarity_matrix[row][col] = get_dtw_distance(sequences1["W"], sequences2["W"]) + get_dtw_distance(sequences1["X"], sequences2["X"]) + get_dtw_distance(sequences1["Y"], sequences2["Y"]) + get_dtw_distance(sequences1["Z"], sequences2["Z"])
                         similarity_matrix[col][row] = similarity_matrix[row][col]
-    
+        similarity_matrix = 1 / (1 + similarity_matrix)
+        
     similarity_matrix_with_headers = np.hstack((np.array(gesture_names).reshape(-1,1), similarity_matrix))
     header = gesture_names
     header.insert(0, "Nothing")

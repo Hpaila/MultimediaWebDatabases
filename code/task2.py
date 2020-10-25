@@ -141,22 +141,15 @@ if __name__ == '__main__':
         csv1 = "vectors/tf_idf_vectors_2.csv"
 
     vectors = np.array(vectors_df)
+    words_dir_path = args.output_dir + "words/"
+    process_word_file(words_dir_path, args.gesture)        
+    #print(len(feature_dict))
+    feature_list = list(feature_dict)
+    feature_list.sort()
+    create_tf_vectors(args.output_dir, feature_list,vectors_df.columns)
 
     if args.type == 1:
-        print("dot product:")
-        words_dir_path = args.output_dir + "words/"
-        process_word_file(words_dir_path, args.gesture)        
-        #print(len(feature_dict))
-        feature_list = list(feature_dict)
-        feature_list.sort()
-        
-        #creating vectors directory
-        try:
-            os.mkdir(args.output_dir + "vectors/")
-        except OSError as error:
-            print("vectors directory already exists")
-
-        create_tf_vectors(args.output_dir, feature_list,vectors_df.columns)
+        print("dot product:")    
         #create_tf_idf_vectors(args.output_dir, args.gestures_dir, feature_list)
         if args.vector_model == "tf":
             similar_gestures("vectors/tf_vectors_2.csv")
