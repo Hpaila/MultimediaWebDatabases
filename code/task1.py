@@ -8,21 +8,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create vector models.')
     parser.add_argument('--output_dir', help='output directory', required=True)
     parser.add_argument('--vector_model', help='vector model', required=True)
-    parser.add_argument('--k', type=int, help='Number of components', required=True)
-    parser.add_argument('--type', type=int, help='Type of dimensionality reduction', required=True)
+    parser.add_argument('--k', type=int, help='Number of latent semantics', required=True)
+    parser.add_argument('--user_option', help='Type of dimensionality reduction', required=True)
     args = parser.parse_args()
-
-    vectors_df = None   
-    if args.vector_model == "tf":
-        vectors_df = pd.read_csv(args.output_dir + "vectors/tf_vectors.csv")
-    elif args.vector_model == "tf_idf":
-        vectors_df = pd.read_csv(args.output_dir + "vectors/tf_idf_vectors.csv")
-    else:
-        print("Invalid vector model, please enter tf or tf_idf")
-
+    
+    vectors_df = pd.read_csv(args.output_dir + "vectors/" + args.vector_model + "_vectors.csv")
     vectors = np.array(vectors_df)
     
-    if args.type == 1:
+    if args.user_option == "pca":
         pca = PCA(n_components=args.k)
         pca.fit(vectors[0:, 1:])
         # saving the model, so that it can be used in future tasks to transform the query gesture
@@ -36,7 +29,7 @@ if __name__ == '__main__':
 
         pca_components_scores_output.close()
         pd.DataFrame(latent_vectors).to_csv(args.output_dir + args.vector_model + "_pca_vectors.csv", header = None, index = None)
-    elif args.type == 2:
+    elif args.user_option == "svd":
         svd = TruncatedSVD(n_components=args.k)
         svd.fit(vectors[0:, 1:])
         # saving the model, so that it can be used in future tasks to transform the query gesture
@@ -50,7 +43,7 @@ if __name__ == '__main__':
             svd_components_scores_output.write(str(zipped) + "\n")
         svd_components_scores_output.close()
         pd.DataFrame(latent_vectors).to_csv(args.output_dir + args.vector_model + "_svd_vectors.csv", header = None, index = None)
-    elif args.type == 3:
+    elif args.user_option == "nmf":
         nmf = NMF(n_components=args.k)
         nmf.fit(vectors[0:, 1:])
         # saving the model, so that it can be used in future tasks to transform the query gesture
@@ -65,7 +58,7 @@ if __name__ == '__main__':
 
         nmf_components_scores_output.close()
         pd.DataFrame(latent_vectors).to_csv(args.output_dir + args.vector_model + "_nmf_vectors.csv", header = None, index = None)
-    elif args.type == 4:
+    elif args.user_option == "lda":
         lda = LatentDirichletAllocation(n_components=args.k)
         lda.fit(vectors[0:, 1:])
         # saving the model, so that it can be used in future tasks to transform the query gesture
@@ -81,5 +74,5 @@ if __name__ == '__main__':
         lda_components_scores_output.close()
         pd.DataFrame(latent_vectors).to_csv(args.output_dir + args.vector_model + "_lda_vectors.csv", header = None, index = None)
     else:
-        print("Invalid type, please select value from 1 to 4")
+        print("Invalid user option, please enter one of pca, svd, nmf, lda")
         
