@@ -30,21 +30,25 @@ def partition_gestures_into_p_groups(svd_or_nmf_type):
 
 def perform_laplacian_spectral_clustering(similarity_matrix, num_of_clusters):
     threshold = np.median(similarity_matrix)
-    # print("rahul", similarity_matrix.max(), similarity_matrix.min())
-    vectorizer = np.vectorize(lambda x: 1 if x > threshold else 0)
-    W = np.vectorize(vectorizer)(similarity_matrix)
-    # print(W)
-    D = np.diag(np.sum(np.array(csr_matrix(W).todense()), axis = 1))
-    # print('degree matrix:')
-    # print(D)
+    print(threshold)
     
+    vectorizer = np.vectorize(lambda x: 1 if x > threshold else 0)
+    # creating the adjacency graph matrix using median as threshold
+    W = np.vectorize(vectorizer)(similarity_matrix)
+    
+    # creating the diagonal matrix which contains the degree of each vertex
+    D = np.diag(np.sum(np.array(csr_matrix(W).todense()), axis = 1))
+    
+    # creating the laplacian matrix
     L = D - W
-    # print('laplacian matrix:')
-    # print(L)
 
+    # generating the eigen values and eigen vectors
     eigen_values, eigen_vectors = np.linalg.eig(L)
 
-    return k_means_clustering(eigen_vectors, num_of_clusters)
+    # running kmeans on the generated eign vectors
+    km = KMeans(init="random", n_clusters=num_of_clusters)
+    km.fit(similarity_matrix)
+    return km.labels_
     
 
 def k_means_clustering(data, number_of_clusters):
@@ -60,7 +64,7 @@ def k_means_clustering(data, number_of_clusters):
 
     error = np.linalg.norm(centers_new - centers_old)
     prev_error = None
-    for i in range(100):
+    for i in range(95):
         prev_error = error
         for i in range(number_of_clusters):
             distances[:, i] = np.linalg.norm(data - centers_old[i], axis = 1)
@@ -110,25 +114,31 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Task 4a - Using SVD from 3a
-    print(partition_gestures_into_p_groups("svd"))
-    
+    partitions = partition_gestures_into_p_groups("svd")
+    for key in partitions:
+        print("Latent feature ", key)
+        print("---------------------------------------------------")
+        print(partitions[key])
+        print()
     # Task 4b - Using NMF from 3b
-    # print(partition_gestures_into_p_groups("nmf"))
+    # partitions = print(partition_gestures_into_p_groups("nmf"))
 
     # Laplacian spectral clustering
     similarity_matrix_with_headers = np.array(pd.read_csv(args.output_dir + "similarity_matrix_" + args.user_option + ".csv", header=None))
+    gestures_list = similarity_matrix_with_headers[0][1:]
     similarity_matrix = np.array(similarity_matrix_with_headers[1:, 1:], dtype=float)
-    # clusters = perform_laplacian_spectral_clustering(similarity_matrix, args.p)
-    clusters = k_means_clustering(similarity_matrix, args.p) 
+    clusters = perform_laplacian_spectral_clustering(similarity_matrix, args.p)
+    # clusters = k_means_clustering(similarity_matrix, args.p) 
 
     # clusters = kmeans(similarity_matrix, k = args.p)
-    gestures_list = similarity_matrix_with_headers[0][1:]
 
-    # for i in range(args.p):
-    #     print("\nCluster ", i)
-    #     indexes = np.where(clusters == i)[0]
-    #     for index in indexes:
-    #         print(gestures_list[index])
+    for i in range(args.p):
+        print("\nCluster ", i)
+        print("---------------------------------------------------")
+        indexes = np.where(clusters == i)[0]
+        for index in indexes:
+            print(gestures_list[index])
+        print()
     
     # km = KMeans(init="random", n_clusters=args.p)
     # km.fit(similarity_matrix)
@@ -136,6 +146,8 @@ if __name__ == '__main__':
 
     # for i in range(args.p):
     #     print("\nCluster ", i)
+    #     print("---------------------------------------------------")
     #     indexes = np.where(km.labels_ == i)[0]
     #     for index in indexes:
     #         print(gestures_list[index])
+    #     print()
