@@ -56,7 +56,7 @@ if __name__ == '__main__':
         #TODO Need to change this to similarity matrix
         similarity_matrix = distance_matrix
         gesture_names = np.squeeze(vectors[0:,:1].T).tolist()
-
+        
     elif args.user_option == 6:
         similarity_matrix = [[-1 for x in range(similarity_matrix_size)] for x in range(similarity_matrix_size)] 
         words_dir_path = args.output_dir + "words/"
@@ -92,6 +92,11 @@ if __name__ == '__main__':
                         similarity_matrix[row][col] = get_dtw_distance(sequences1["W"], sequences2["W"]) + get_dtw_distance(sequences1["X"], sequences2["X"]) + get_dtw_distance(sequences1["Y"], sequences2["Y"]) + get_dtw_distance(sequences1["Z"], sequences2["Z"])
                         similarity_matrix[col][row] = similarity_matrix[row][col]
     
+    similarity_matrix_with_headers = np.hstack((np.array(gesture_names).reshape(-1,1), similarity_matrix))
+    header = gesture_names
+    header.insert(0, "Nothing")
+    pd.DataFrame(similarity_matrix_with_headers).to_csv(args.output_dir + "similarity_matrix_" + str(args.user_option)+ ".csv", header = gesture_names, index = None)
+
     #Perform dimensionality reduction on the similarity matrix and save the top p latent gestures
     if args.type == "svd":
         svd = TruncatedSVD(n_components=args.p)
