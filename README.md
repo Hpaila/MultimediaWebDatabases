@@ -5,8 +5,7 @@ Group project for CSE 515 @ Arizona State University
 To run:
 ```python code/task0a.py --gestures_dir data/ --window 3 --shift 3 --resolution 3```
 
-```python code/task0b.py --gestures_dir data/ --output_dir outputs/```
-
+```python code/task0b.py --output_dir outputs/```
 
 ```python code/task1.py --output_dir outputs/ --vector_model tf --k 10 --type 3```
 

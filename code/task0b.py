@@ -51,8 +51,8 @@ def create_tf_vectors(directory_path, feature_list):
         csv_write.writerow(tf_vector)
     tf_vector_output_file.close()
 
-def create_tf_idf_vectors(directory_path, gestures_dir, feature_list):
-    number_of_files = get_number_of_gesture_files_in_dir(gestures_dir + "W/")
+def create_tf_idf_vectors(directory_path, words_dir_path, feature_list):
+    number_of_files = get_number_of_gesture_files_in_dir(words_dir_path)
     print(number_of_files)
 
     count_of_a_feature_in_object = []
@@ -81,7 +81,6 @@ def create_tf_idf_vectors(directory_path, gestures_dir, feature_list):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create vector models.')
-    parser.add_argument('--gestures_dir', help='gestures directory', required=True)
     parser.add_argument('--output_dir', help='output directory', required=True)
     args = parser.parse_args()
 
@@ -103,4 +102,4 @@ if __name__ == '__main__':
         print("vectors directory already exists")
 
     create_tf_vectors(args.output_dir, feature_list)
-    create_tf_idf_vectors(args.output_dir, args.gestures_dir, feature_list)
+    create_tf_idf_vectors(args.output_dir, words_dir_path, feature_list)

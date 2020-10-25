@@ -67,7 +67,7 @@ def write_words(normalized_data, quantized_symbolic_data, quantized_amplitude_da
 
 def normalize(data):
     data = np.transpose(data)
-    new_data = np.divide(data - data.min(axis=0), data.max(axis=0) - data.min(axis=0), out=data,
+    new_data = np.divide(data - data.min(axis=0), data.max(axis=0) - data.min(axis=0), out = np.zeros(data.shape),
                          where=(data.max(axis=0) - data.min(axis=0)) != 0)
     new_data = (new_data * 2) - 1
     new_data = np.transpose(new_data)
