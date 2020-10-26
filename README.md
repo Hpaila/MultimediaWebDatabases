@@ -15,6 +15,7 @@ While executing task1.py, user_option can be pca, svd, nmf or lda
 ```python code/task2.py --query_word_file_name 2_words.csv --vector_model tf --output_dir outputs/ --query_output_dir outputs/ --user_option pca```
 
 While executing task2.py, user_option can be dot_product, pca, svd, nmf, lda, edit_distance or dtw
+For edit_distance, use --custom_cost=true to enable the custom cost
 
 ``` python code/task3.py --vector_model tf --output_dir outputs/ --user_option pca --p 10 --type svd ```
 While executing task3.py, user_option can be dot_product, pca, svd, nmf, lda, edit_distance or dtw.
