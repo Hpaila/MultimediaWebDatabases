@@ -36,6 +36,7 @@ if __name__ == '__main__':
     parser.add_argument('--user_option', help='user option', required=True)
     parser.add_argument('--p', type=int, help='Number of latent components', required=True)
     parser.add_argument('--type', help='svd or nmf', required=True)
+    parser.add_argument('--custom_cost', type=bool, help='Custom cost for edit distance', required=False)
     args = parser.parse_args()
 
     similarity_matrix = None
@@ -78,7 +79,7 @@ if __name__ == '__main__':
                         sequences2 = get_sequences(words_dir_path + file_name2, "edit")
                         for component in ['W', 'X', 'Y', 'Z']:
                             for sensor_id in range(NUM_SENSORS):
-                                similarity_matrix[row][col] += get_edit_distance(sequences1[(component, sensor_id)], sequences2[(component, sensor_id)])
+                                similarity_matrix[row][col] += get_edit_distance(sequences1[(component, sensor_id)], sequences2[(component, sensor_id)], custom_cost = args.custom_cost)
                         # print(similarity_matrix[row][col])
                         similarity_matrix[col][row] = similarity_matrix[row][col]
         similarity_matrix = np.array(similarity_matrix)

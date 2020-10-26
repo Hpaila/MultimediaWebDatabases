@@ -128,8 +128,9 @@ if __name__ == '__main__':
     parser.add_argument('--output_dir', help='output directory', required=True)
     parser.add_argument('--query_output_dir', help='query output directory', required=True)
     parser.add_argument('--user_option', help='Type of dimensionality reduction', required=True)
+    parser.add_argument('--custom_cost', type=bool, help='Custom cost for edit distance', required=False)
     args = parser.parse_args()
-
+    
     vectors_df = pd.read_csv(args.output_dir + "vectors/" + args.vector_model + "_vectors.csv")
     vectors = np.array(vectors_df)
 
@@ -141,7 +142,7 @@ if __name__ == '__main__':
     feature_list.sort()
     create_query_tf_vector(args.output_dir, feature_list,vectors_df.columns)
     create_query_tf_idf_vector(args.query_output_dir, args.output_dir+"words/", feature_list, vectors_df.columns)
-    
+
     if args.user_option == "dot_product":
         print("dot product:")    
         if args.vector_model == "tf":
@@ -168,11 +169,11 @@ if __name__ == '__main__':
                 sequences = get_sequences(words_dir_path + file_name, "edit")
                 for component in ['W', 'X', 'Y', 'Z']:
                     for sensor_id in range(NUM_SENSORS):
-                        distances[file_name] += get_edit_distance(sequences[(component, sensor_id)], query_sequences[(component, sensor_id)])
+                        distances[file_name] += get_edit_distance(sequences[(component, sensor_id)], query_sequences[(component, sensor_id)], custom_cost = args.custom_cost)
 
         sorted_distances = sorted(distances.items(), key=lambda x: x[1])
         for i in range(0,10):
-                print(sorted_distances[i])
+            print(sorted_distances[i])
         # print(time.time() - start_time)
 
     elif args.user_option == "dtw":
