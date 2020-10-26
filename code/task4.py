@@ -5,8 +5,16 @@ from copy import deepcopy
 
 from scipy.sparse import csr_matrix
 from scipy.spatial import distance
+import os
 
 def partition_gestures_into_p_groups(svd_or_nmf_type):
+    
+    files = os.listdir(args.output_dir)
+    fname = "top_p_latent_gestures_scores_" + svd_or_nmf_type + "_" + str(args.user_option)
+    if fname not in files :
+        print("File not found!\n")
+        return []
+    
     with open(args.output_dir + "top_p_latent_gestures_scores_" + svd_or_nmf_type + "_" + str(args.user_option)) as f:
         gestures_scores = []
         for line in f:
