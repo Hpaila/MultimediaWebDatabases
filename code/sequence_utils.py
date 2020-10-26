@@ -32,9 +32,9 @@ def get_dtw_distance(list1, list2):
     for i in range(m + 1): 
         for j in range(n + 1):
             if i == 0:
-                dp[i][j] = list2[j-1]
+                dp[i][j] = abs(list2[j-1])
             elif j == 0:
-                dp[i][j] = list1[i-1]
+                dp[i][j] = abs(list1[i-1])
             else:
                 dp[i][j] = abs(list1[i-1] - list2[j-1]) + min(dp[i][j-1],        
                                    dp[i-1][j],     
