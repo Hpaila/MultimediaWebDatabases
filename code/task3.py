@@ -58,6 +58,9 @@ if __name__ == '__main__':
         # distance_matrix = distance_matrix(vectors[0:,1:], vectors[0:, 1:])
         #TODO change this to euclidean if nan values
         distance_matrix = cdist(vectors[0:,1:], vectors[0:, 1:], metric = "mahalanobis")
+        if np.isnan(distance_matrix).any():
+            print("distance matrix contains nan values, so calculating using euclidean metric instead of mahalanobis")
+            distance_matrix = cdist(vectors[0:,1:], vectors[0:, 1:], metric = "euclidean")
         similarity_matrix = 1 / (1 + distance_matrix)
         gesture_names = np.squeeze(vectors[0:,:1].T).tolist()
         
