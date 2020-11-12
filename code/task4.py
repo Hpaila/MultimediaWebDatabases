@@ -59,10 +59,10 @@ def KMeans(similarity_matrix, num_of_clusters):
     max_iterations = 100
     center_ids = np.random.choice(len(similarity_matrix), num_of_clusters, replace=False)
     centers = similarity_matrix[center_ids, :]
-    clusters = np.argmin(distance.cdist(similarity_matrix, centers, 'mahalanobis'), axis = 1)
+    clusters = np.argmin(distance.cdist(similarity_matrix, centers, 'euclidean'), axis = 1)
     for i in range(max_iterations):
         centers = np.vstack([similarity_matrix[clusters == i, :].mean(axis = 0) for i in range(num_of_clusters)])
-        new_clusters = np.argmin(distance.cdist(similarity_matrix, centers, 'mahalanobis'), axis=1)
+        new_clusters = np.argmin(distance.cdist(similarity_matrix, centers, 'euclidean'), axis=1)
         if np.array_equal(clusters, new_clusters):
             break
         clusters = new_clusters

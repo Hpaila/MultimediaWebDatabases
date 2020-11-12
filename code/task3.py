@@ -115,7 +115,7 @@ if __name__ == '__main__':
     #TODO do we enable normalization or not??
     # similarity_matrix = np.divide(similarity_matrix - similarity_matrix.min(), similarity_matrix.max() - similarity_matrix.min(), out = similarity_matrix)
     similarity_matrix_with_headers = np.hstack((np.array(gesture_names).reshape(-1,1), similarity_matrix))
-    header = gesture_names
+    header = list(gesture_names) # deep copy of the list
     header.insert(0, "Nothing")
     pd.DataFrame(similarity_matrix_with_headers).to_csv(args.output_dir + "similarity_matrix_" + str(args.user_option)+ ".csv", header = gesture_names, index = None)
 
