@@ -12,6 +12,10 @@ OUTPUT_FOLDER = "./outputs"
 OUTPUT_FILE_PATH = "./outputs/words"
 band_ranges = []
 feature_dict = set()
+gestures_dir = ""
+window = 0
+shift = 0
+resolution = 0
 
 def getBandNumber(normalized_value):
     for i in range(len(band_ranges)):
@@ -73,15 +77,8 @@ def normalize(data):
     new_data = np.transpose(new_data)
     return new_data
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Create gesture words dictionary.')
-    parser.add_argument('--gestures_dir', help='directory of input data', required=True)
-    parser.add_argument('--window', type=int, help='window length', required=True)
-    parser.add_argument('--shift', type=int, help='shift length', required=True)
-    parser.add_argument('--resolution', type=int, help='resolution', required=True)
 
-    args = parser.parse_args()
-
+def begin_execution():
     if not os.path.isdir(OUTPUT_FOLDER):
         try:
             os.mkdir(OUTPUT_FOLDER)
@@ -89,16 +86,16 @@ if __name__ == '__main__':
             print("Creation of the directory %s failed, because it already exists" % OUTPUT_FOLDER)
         else:
             print("Successfully created the directory %s" % OUTPUT_FOLDER)
-    generate_band_ranges(args.resolution)
-
-    dir_list = os.listdir(args.gestures_dir)
+    generate_band_ranges(resolution)
+    dir_list = os.listdir(gestures_dir)
     for directory in dir_list:
         component_id = directory
-        if directory in ['W','X','Y','Z']:
-            files = os.listdir(args.gestures_dir + directory)
+        if directory in ['W', 'X', 'Y', 'Z']:
+            files = os.listdir(gestures_dir + directory)
             for file in files:
                 if ".csv" in file:
-                    sensor_data = pd.DataFrame(pd.read_csv(args.gestures_dir + directory + '/'+ file, header=None)).to_numpy()
+                    sensor_data = pd.DataFrame(
+                        pd.read_csv(gestures_dir + directory + '/' + file, header=None)).to_numpy()
                     data_avg = np.mean(sensor_data, axis=1)
                     # print(data_avg)
                     data_std = np.std(sensor_data, axis=1)
@@ -108,6 +105,34 @@ if __name__ == '__main__':
                     quantized_symbolic_data = np.vectorize(getBandNumber)(normalized_data)
                     # print(sensor_quantized_data)
                     quantized_amplitude_data = np.vectorize(getBandMidPoint)(normalized_data)
-                    write_words(normalized_data, quantized_symbolic_data, quantized_amplitude_data, args.shift, args.window, file, component_id, data_avg, data_std)
-    
+                    write_words(normalized_data, quantized_symbolic_data, quantized_amplitude_data, shift,
+                                window, file, component_id, data_avg, data_std)
+
     print(len(feature_dict))
+
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Create gesture words dictionary.')
+    parser.add_argument('--gestures_dir', help='directory of input data', required=True)
+    parser.add_argument('--window', type=int, help='window length', required=True)
+    parser.add_argument('--shift', type=int, help='shift length', required=True)
+    parser.add_argument('--resolution', type=int, help='resolution', required=True)
+
+    args = parser.parse_args()
+    gestures_dir = args.gestures_dir
+    window = args.window
+    shift = args.shift
+    resolution = args.resolution
+
+    begin_execution()
+
+
+def call_task0a(local_gestures_dir, local_window, local_shift, local_resolution):
+    global gestures_dir, window, resolution, shift
+    gestures_dir = local_gestures_dir + "/"
+    window = local_window
+    shift = local_shift
+    resolution = local_resolution
+    begin_execution()
+
