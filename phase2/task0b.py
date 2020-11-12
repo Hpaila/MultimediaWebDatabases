@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import csv
 import glob
+output_dir = ""
 
 #This is the total number of unique features in our dataset, so our vector size will be this for every database object or query object
 feature_dict = set()
@@ -79,27 +80,35 @@ def create_tf_idf_vectors(directory_path, words_dir_path, feature_list):
     header.extend(feature_list)
     pd.DataFrame(tf_idf_vectors).to_csv(directory_path + "vectors/tf_idf_vectors.csv", header = header, index = None)
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Create vector models.')
-    parser.add_argument('--output_dir', help='output directory', required=True)
-    args = parser.parse_args()
-
-    words_dir_path = args.output_dir + "words/"
+def begin_execution():
+    words_dir_path = output_dir + "words/"
     files = os.listdir(words_dir_path)
     for file_name in files:
         if file_name.endswith(".csv"):
             process_word_file(words_dir_path, file_name)
-    
+
     print(len(feature_dict))
 
     feature_list = list(feature_dict)
     feature_list.sort()
-    
-    #creating vectors directory
+
+    # creating vectors directory
     try:
-        os.mkdir(args.output_dir + "vectors/")
+        os.mkdir(output_dir + "vectors/")
     except OSError as error:
         print("vectors directory already exists")
 
-    create_tf_vectors(args.output_dir, feature_list)
-    create_tf_idf_vectors(args.output_dir, words_dir_path, feature_list)
+    create_tf_vectors(output_dir, feature_list)
+    create_tf_idf_vectors(output_dir, words_dir_path, feature_list)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Create vector models.')
+    parser.add_argument('--output_dir', help='output directory', required=True)
+    args = parser.parse_args()
+    begin_execution()
+
+def call_task0b(local_output_dir):
+    global output_dir
+    output_dir = local_output_dir
+    begin_execution()
