@@ -7,7 +7,7 @@ import glob
 import joblib
 from sklearn.decomposition import TruncatedSVD, NMF
 from scipy.spatial import distance
-from sequence_utils import get_edit_distance, get_dtw_distance
+from phase2.sequence_utils import get_edit_distance, get_dtw_distance
 import time
 from scipy.spatial import distance_matrix
 from scipy.spatial.distance import cdist
@@ -117,7 +117,7 @@ if __name__ == '__main__':
     similarity_matrix_with_headers = np.hstack((np.array(gesture_names).reshape(-1,1), similarity_matrix))
     header = list(gesture_names) # deep copy of the list
     header.insert(0, "Nothing")
-    pd.DataFrame(similarity_matrix_with_headers).to_csv(args.output_dir + "similarity_matrix_" + str(args.user_option)+ ".csv", header = gesture_names, index = None)
+    pd.DataFrame(similarity_matrix_with_headers).to_csv(args.output_dir + "similarity_matrix_" + str(args.user_option)+ ".csv", header = header, index = None)
 
     #Perform dimensionality reduction on the similarity matrix and save the top p latent gestures
     if args.type == "svd":
