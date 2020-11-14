@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import csv
 import glob
-output_dir = ""
+output_dir = "outputs/"
 
 #This is the total number of unique features in our dataset, so our vector size will be this for every database object or query object
 feature_dict = set()
@@ -106,9 +106,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create vector models.')
     parser.add_argument('--output_dir', help='output directory', required=True)
     args = parser.parse_args()
+    output_dir = args.output_dir
     begin_execution()
 
 def call_task0b(local_output_dir):
     global output_dir
-    output_dir = local_output_dir
+    output_dir = local_output_dir or output_dir
     begin_execution()

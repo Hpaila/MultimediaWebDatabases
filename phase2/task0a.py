@@ -13,9 +13,9 @@ OUTPUT_FILE_PATH = "./outputs/words"
 band_ranges = []
 feature_dict = set()
 gestures_dir = ""
-window = 0
-shift = 0
-resolution = 0
+window = 3
+shift = 3
+resolution = 3
 
 def getBandNumber(normalized_value):
     for i in range(len(band_ranges)):
@@ -130,9 +130,10 @@ if __name__ == '__main__':
 
 def call_task0a(local_gestures_dir, local_window, local_shift, local_resolution):
     global gestures_dir, window, resolution, shift
-    gestures_dir = local_gestures_dir + "/"
-    window = local_window
-    shift = local_shift
-    resolution = local_resolution
+    gestures_dir = local_gestures_dir
+    window = local_window or window
+    shift = local_shift or shift
+    resolution = local_resolution or resolution
+    print(gestures_dir, window, resolution, shift)
     begin_execution()
 
