@@ -7,7 +7,7 @@ import glob
 import joblib
 from sklearn.decomposition import PCA, TruncatedSVD, LatentDirichletAllocation, NMF
 from scipy.spatial import distance
-from phase2.sequence_utils import get_edit_distance, get_dtw_distance
+from sequence_utils import get_edit_distance, get_dtw_distance
 
 NUM_SENSORS = 20
 #This is the total number of unique features in our dataset, so our vector size will be this for every database object or query object
