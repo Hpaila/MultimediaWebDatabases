@@ -3,9 +3,14 @@ import pandas as pd
 import argparse
 from scipy.spatial import distance
 
-def get_concatenated_hash(input_vector, p_stable_vectors):
+w = 0.3
+
+def get_concatenated_hash(input_vector, p_stable_vectors, b):
     hash_values = (np.dot(input_vector, p_stable_vectors.T) > 0).astype("int")
     return ''.join(hash_values.astype("str"))
+
+    # hash_values = np.floor((np.dot(input_vector, p_stable_vectors.T) + b) / w)
+    # return ''.join(hash_values.astype("str"))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Locality Sensitive Hashing')
@@ -30,13 +35,16 @@ if __name__ == '__main__':
     # Dimensionality of input vectors
     d = input_vectors_with_labels.shape[1] - 1
     p_stable_vectors_map = {}
+    b_map = {}
     lsh_hash_tables = []
 
     for l in range(args.l):
         p_stable_vectors = np.random.randn(args.k, d)
         p_stable_vectors_map[l] = p_stable_vectors
+        b = [np.random.uniform(0, w) for i in range(args.k)]
+        b_map[l] = b
         for gesture_name, input_vector in input_vectors_map.items():
-            concatenated_hash = get_concatenated_hash(input_vector, p_stable_vectors)
+            concatenated_hash = get_concatenated_hash(input_vector, p_stable_vectors, b)
             lsh_hash_tables.append({})
             if concatenated_hash not in lsh_hash_tables[l]:
                 lsh_hash_tables[l][concatenated_hash] = []
@@ -54,7 +62,7 @@ if __name__ == '__main__':
     overall_gestures = 0
 
     for i in range(args.l):
-        query_concatened_hash = get_concatenated_hash(input_vectors_map[query_gesture], p_stable_vectors_map[i])
+        query_concatened_hash = get_concatenated_hash(input_vectors_map[query_gesture], p_stable_vectors_map[i], b_map[i])
         if query_concatened_hash in lsh_hash_tables[i]:
             number_of_buckets += 1
             gestures_in_bucket = lsh_hash_tables[i][query_concatened_hash]
