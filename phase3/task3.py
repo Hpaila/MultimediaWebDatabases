@@ -68,7 +68,8 @@ if __name__ == '__main__':
     sort_orders = sorted(distances.items(), key=lambda x: x[1])
     print("t most similar gestures are as below:")
     if len(sort_orders) < t:
-        print("Found only " + len(sort_orders) + " gestures in the buckets")
+        print("Found only ", len(sort_orders), " gestures in the buckets")
+        t = len(sort_orders)
     for i in range(0,t):
         print(sort_orders[i][0])
 
