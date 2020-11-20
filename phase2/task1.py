@@ -91,8 +91,9 @@ if __name__ == '__main__':
     begin_execution()
 
 
-def call_task1(local_output_dir=output_dir, local_vector_model=vector_model, local_user_option=user_option):
-    global output_dir, vector_model, user_option
+def call_task1(local_output_dir=output_dir, local_vector_model=vector_model, local_user_option=user_option, local_k = k):
+    global output_dir, vector_model, user_option, k
+    k = local_k or k
     output_dir = local_output_dir or output_dir
     vector_model = local_vector_model or vector_model
     user_option = local_user_option or user_option
