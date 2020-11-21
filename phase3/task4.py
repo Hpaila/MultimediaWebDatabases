@@ -64,16 +64,14 @@ if __name__ == '__main__':
         for i in range(args.t):
             n += binary_vectors_map[sort_orders[i][0]]
         
+        factor = n/N
         p = np.divide(r + 0.5, R+1)
         u = np.divide(n - r + 0.5, N-R+1)
 
         log_values = np.log(np.divide(p*(1-u), u*(1-p)))
 
         for i in range(len(input_vectors)):
-            similarity = 0
-            for j in range(len(input_vectors[i])):
-                similarity += input_vectors[i][j] * log_values[j]
-            similarity_map[input_vectors_with_labels[i][0]] = similarity
+            similarity_map[input_vectors_with_labels[i][0]] = np.sum(binary_weights_matrix[i] * log_values)
 
         sort_orders = sorted(similarity_map.items(), key=lambda x: x[1], reverse=True)
         print("Modified results are")
