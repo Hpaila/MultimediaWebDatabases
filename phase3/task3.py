@@ -52,39 +52,40 @@ if __name__ == '__main__':
         
     print("Created the LSH index structure")
     
-    query_gesture = input("Enter a query gesture to search\n")
-    query_gesture += "_words.csv"
-    t = int(input("Enter the value for t to get the t most similar gestures\n"))
+    while True:
+        query_gesture = input("Enter a query gesture to search\n")
+        query_gesture += "_words.csv"
+        t = int(input("Enter the value for t to get the t most similar gestures\n"))
 
-    number_of_buckets = 0
-    distances = {}
-    unique_gestures = set()
-    overall_gestures = 0
+        number_of_buckets = 0
+        distances = {}
+        unique_gestures = set()
+        overall_gestures = 0
 
-    for i in range(args.l):
-        query_concatened_hash = get_concatenated_hash(input_vectors_map[query_gesture], p_stable_vectors_map[i], b_map[i])
-        if query_concatened_hash in lsh_hash_tables[i]:
-            number_of_buckets += 1
-            gestures_in_bucket = lsh_hash_tables[i][query_concatened_hash]
-            for gesture in gestures_in_bucket:
-                overall_gestures += 1
-                unique_gestures.add(gesture)
+        for i in range(args.l):
+            query_concatened_hash = get_concatenated_hash(input_vectors_map[query_gesture], p_stable_vectors_map[i], b_map[i])
+            if query_concatened_hash in lsh_hash_tables[i]:
+                number_of_buckets += 1
+                gestures_in_bucket = lsh_hash_tables[i][query_concatened_hash]
+                for gesture in gestures_in_bucket:
+                    overall_gestures += 1
+                    unique_gestures.add(gesture)
 
-    for gesture in unique_gestures:
-        distances[gesture] = distance.euclidean(input_vectors_map[query_gesture], input_vectors_map[gesture])
-        
-    sort_orders = sorted(distances.items(), key=lambda x: x[1])
-    print("t most similar gestures are as below:")
-    if len(sort_orders) < t:
-        print("Found only ", len(sort_orders), " gestures in the buckets")
-        t = len(sort_orders)
-    for i in range(0,t):
-        print(sort_orders[i][0])
+        for gesture in unique_gestures:
+            distances[gesture] = distance.euclidean(input_vectors_map[query_gesture], input_vectors_map[gesture])
+            
+        sort_orders = sorted(distances.items(), key=lambda x: x[1])
+        print("t most similar gestures are as below:")
+        if len(sort_orders) < t:
+            print("Found only ", len(sort_orders), " gestures in the buckets")
+            t = len(sort_orders)
+        for i in range(0,t):
+            print(sort_orders[i][0])
 
-    print()
-    print("Total number of buckets searched is ", number_of_buckets)
-    print("Unique gestures considered ", len(unique_gestures))
-    print("Overall gestures considered ", overall_gestures)
+        print()
+        print("Total number of buckets searched is ", number_of_buckets)
+        print("Unique gestures considered ", len(unique_gestures))
+        print("Overall gestures considered ", overall_gestures)
 
 
 
