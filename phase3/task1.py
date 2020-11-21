@@ -55,6 +55,7 @@ if __name__ == '__main__':
     parser.add_argument('--gestures_dir', help='directory of input data', required=True)
     parser.add_argument('--k', type=int, help='k most similar gestures', required=True)
     parser.add_argument('--user_option', help='Type of dimensionality reduction', default="pca", required=True)
+    parser.add_argument('--user_option_k', type =int, help='Number of reduced dimensions', default=20, required=True)
     parser.add_argument('--n', nargs='+', help='User specified gestures or seed data', required=False)
     parser.add_argument('--m', type=int, help='Number of dominant features', required=True)
 
@@ -62,7 +63,7 @@ if __name__ == '__main__':
     parser.add_argument('--window', type=int, help='window length', required=False)
     parser.add_argument('--shift', type=int, help='shift length', required=False)
     parser.add_argument('--resolution', type=int, help='resolution', required=False)
-    parser.add_argument('--output_dir', help='output directory', default="outputs/", required=False)
+    parser.add_argument('--output_dir', help='output directory', default="../outputs/", required=False)
     parser.add_argument('--vector_model', help='vector model', required=False)
     parser.add_argument('--custom_cost', type=bool, help='Custom cost for edit distance', required=False)
 
@@ -70,7 +71,7 @@ if __name__ == '__main__':
 
     task0a.call_task0a(args.gestures_dir, args.window, args.shift, args.resolution)  # construct words from data
     task0b.call_task0b(args.output_dir)  # construct tf and tf-idf
-    task1.call_task1(args.output_dir, args.vector_model, args.user_option)  # get for pca trained model
+    task1.call_task1(args.output_dir, args.vector_model, args.user_option, args.user_option_k)  # get for pca trained model
     task3.call_task3(args.vector_model, args.output_dir, args.user_option, 4,
                      "svd", args.custom_cost)  # construct gesture_gesture_similarity matrix
 
@@ -103,7 +104,15 @@ if __name__ == '__main__':
 
     pd.DataFrame(steady_state_prob_vector).to_csv(args.output_dir + "steady_state_prob.csv", header=None, index=None)
 
-    dominant_feature_indices = (-steady_state_prob_vector).argpartition(args.m, axis=None)[:args.m]
+    steady_state_prob_vector = steady_state_prob_vector.tolist()
+    sorted_list = sorted(zip(steady_state_prob_vector, range(len(steady_state_prob_vector))), key=lambda v: v[0],
+                         reverse=True)
+    dominant_feature_indices = []
+    for (s, i) in sorted_list:
+        dominant_feature_indices.append(i)
+    dominant_feature_indices = dominant_feature_indices[:args.m]
+    print(dominant_feature_indices)
+
     dominant_features = [column_file_map[i] for i in dominant_feature_indices]
     print("Dominant features ", dominant_features)
 
