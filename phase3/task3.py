@@ -6,13 +6,16 @@ from scipy.spatial import distance
 w = 0.3
 def get_all_binary_strings(count):
     if count == 0:
-        return []
-    if count == 1:
-        return ['0', '1']
-    if count == 2:
-        return ['00', '01', '10', '11']
-    if count == 3:
-        return ['000', '001', '010', '011', '100', '101', '110', '111']
+        return ['', '']
+    old = ['']
+    new = []
+    for i in range(count):
+        for ele in old:
+            new.append(ele + '0')
+            new.append(ele + '1')
+        old = list(new)
+        new = []
+    return old
 
 def get_concatenated_hash(input_vector, p_stable_vectors, b):
     hash_values = (np.dot(input_vector, p_stable_vectors.T) > 0).astype("int")
@@ -22,6 +25,7 @@ def get_concatenated_hash(input_vector, p_stable_vectors, b):
     # return ''.join(hash_values.astype("str"))
 
 if __name__ == '__main__':
+    get_all_binary_strings(4)
     parser = argparse.ArgumentParser(description='Locality Sensitive Hashing')
 
     parser.add_argument('--k', type=int, help='Number of hashes per layer', required=True)
