@@ -1,9 +1,13 @@
-from phase2 import task0a, task0b, task1
+from phase2 import task0a, task0b, task1, task3
 import argparse
 import pandas as pd
 import numpy as np
 from scipy.spatial import distance
 from sklearn.model_selection import train_test_split
+import sklearn
+
+from phase3.task1 import ppr
+
 '''
 gestures_dir = '../sample/'
 k = 20
@@ -61,7 +65,54 @@ def calc_accuracy(predicted, test) :
     accuracy = fp / len(test)
     print("Accuracy : ", accuracy)
     
-    
+
+def ppr_classifier(query_file, labels, vector_model, output_dir, user_option, custom_cost, k):
+    number_of_dominant_features = 10
+
+    task3.call_task3(vector_model, output_dir, user_option, 4,
+                     "svd", custom_cost)  # construct gesture_gesture_similarity matrix
+    similarity_matrix = np.array(
+        pd.read_csv(output_dir + "similarity_matrix_" + user_option + ".csv", header=None))
+
+    column_file_map = similarity_matrix[0][1:].tolist()  # give a column number, return file name
+
+    name_column_map = dict()  # give a filename, returns the row index
+    for index, filename in enumerate(column_file_map):
+        name_column_map[filename] = index
+
+    adjacency_graph = np.array(similarity_matrix[1:, 1:].tolist(), dtype=float)
+    adjacency_graph = adjacency_graph * (adjacency_graph >= np.sort(adjacency_graph, axis=1)[:, [-k]])
+    normalized_adjacency_graph = sklearn.preprocessing.normalize(adjacency_graph, norm='l1', axis=0)
+    vector_size = len(adjacency_graph)
+    restart_vector = np.zeros((vector_size, 1))
+
+    query_file = query_file.replace(".csv", "_words.csv")
+    user_specified_column = name_column_map[query_file]
+
+    restart_vector[user_specified_column][0] = 1
+
+    ppr_vector = ppr(normalized_adjacency_graph, restart_vector)
+
+    sorted_list = sorted(zip(ppr_vector, range(len(ppr_vector))), key=lambda v: v[0],
+                         reverse=True)
+    dominant_feature_indices = []
+    for (s, i) in sorted_list:
+        dominant_feature_indices.append(i)
+    dominant_feature_indices = dominant_feature_indices[:number_of_dominant_features]
+
+    dominant_features = [column_file_map[i].replace("_words.csv", "") for i in dominant_feature_indices]
+    print("Dominant features ", dominant_features)
+
+    labels.tolist()
+    class_map = {}
+    for label in labels:
+        class_map[label[0]] = label[1]
+
+    dominant_features_class = [class_map[int(x)] for x in dominant_features]
+
+    print("Based on PPR classifier for given query the class label is ", max(set(dominant_features_class), key=dominant_features_class.count))
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Create gesture words dictionary.')
@@ -97,11 +148,5 @@ if __name__ == '__main__':
     labels_predicted = knn(vectors_train, vectors_test, labels_train, args.nn)
     print(labels_predicted)
     calc_accuracy(labels_predicted, labels_test)
-    
-    
-    
-    
-        
-    
-        
-    
+
+    ppr_classifier(args.query_file, np.array(labels_raw), args.vector_model, args.output_dir, args.user_option, args.custom_cost, args.k)
