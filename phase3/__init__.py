@@ -1,5 +1,5 @@
 import sys
 
 if __name__ == '__main__':
-    sys.path.append("/Users/hpaila/Projects/Personal/MWDB/MultimediaWebDatabases/phase2")
+    sys.path.append("/home/sakethk98/Courses/mwdb/Assignment3")
     print(sys.path)

@@ -3,7 +3,7 @@ import argparse
 import pandas as pd
 import numpy as np
 from scipy.spatial import distance
-
+from sklearn.model_selection import train_test_split
 '''
 gestures_dir = '../sample/'
 k = 20
@@ -19,16 +19,53 @@ custom_cost = False
 def get_n_nearest(query_vector, vectors, nn) :
     distances={}
     for v in vectors:
-        distances[v[0]]=distance.euclidean(query_vector,v[1:])
-    sort_orders = sorted(distances.items(), key=lambda x: x[1])
-    for i in range(0,nn):
-        print(sort_orders[i])
-    return sort_orders[:10]
+        distances[v[0]]=[v[1], distance.euclidean(query_vector,v[2:])]
+    sort_orders = sorted(distances.items(), key=lambda x: x[1][1])
+    #for i in range(0,nn):
+    #    print(sort_orders[i])
+    return sort_orders[:nn]
 
+def calc_mode(data) :
+    classes = {}
+    for d in data :
+        if d[1][0] in classes :
+            classes[d[1][0]] += 1
+        else :
+            classes[d[1][0]] = 1
+    max_val = max(classes.values())
+    max_keys = [k for k, v in classes.items() if v == max_val] 
+    return max_keys[0]
+    
+
+def knn(vectors_train, vectors_test, labels_train, nn) :
+    
+    predictions = []
+    filenames = vectors_train[:,0]
+    filenames = filenames[:, np.newaxis]
+    labels_train = np.array(labels_train)
+    labels_train = labels_train[:, np.newaxis]
+    vectors = np.concatenate((filenames, labels_train, vectors_train[:,1:]), axis=1)
+    
+    for v in vectors_test :
+        neighbours = get_n_nearest(v[1:], vectors, nn)
+        mode = calc_mode(neighbours)
+        predictions.append([v[0], mode])
+    
+    return predictions
+    
+def calc_accuracy(predicted, test) :
+    fp = 0
+    for i in range(len(test)) :
+        if(predicted[i][1]==test[i]) :
+            fp += 1
+    accuracy = fp / len(test)
+    print("Accuracy : ", accuracy)
+    
+    
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Create gesture words dictionary.')
-    parser.add_argument('--query_file', help='Query file name', default = '2.csv', required=False)
+    parser.add_argument('--query_file', help='Query file name', default = '250.csv', required=False)
     parser.add_argument('--nn', type=int, help='number of neighbours', default = 10, required=False)
     
     parser.add_argument('--gestures_dir', help='directory of input data', default = '../sample/', required=False)
@@ -51,24 +88,15 @@ if __name__ == '__main__':
     
     vectors = np.array(pd.read_csv(args.output_dir + args.vector_model + "_" + args.user_option + "_vectors.csv", header = None))
     filenames = vectors[:, 0]
-    query_file_name = args.query_file.split('.')[0] + '_words.csv'
-    query_file_index = np.where(filenames == query_file_name)
-    query_vector = vectors[query_file_index[0][0], 1:]
-    neighbours = get_n_nearest(query_vector, vectors, args.nn)
+
+    labels_raw = np.array(pd.read_csv(args.gestures_dir + 'all_labels.csv', index_col=None, header=None))
+    labels_dict = {l[0] : l[1] for l in labels_raw}
+    labels_ordered = [labels_dict[int(v[0].split('_')[0])] for v in vectors]
     
-    labels = np.array(pd.read_csv(args.gestures_dir + 'all_labels.csv', index_col=None, header=None))
-    classes = {}
-    for n in neighbours :
-        file = int(n[0].split('_')[0])
-        i = np.where(labels == file)[0][0]
-        if labels[i][1] not in classes :
-            classes[labels[i][1]] = 1
-        else :
-            classes[labels[i][1]] += 1
-    max_val = max(classes.values())
-    max_key = [k for k, v in classes.items() if v == max_val]    
-    
-    print('Query file ', args.query_file, ' is ', max_key[0])    
+    vectors_train, vectors_test, labels_train, labels_test = train_test_split(vectors, labels_ordered, test_size=0.33, random_state=42)
+    labels_predicted = knn(vectors_train, vectors_test, labels_train, args.nn)
+    print(labels_predicted)
+    calc_accuracy(labels_predicted, labels_test)
     
     
     
