@@ -45,7 +45,7 @@ if __name__ == '__main__':
         binary_vectors_map[input_vectors_with_labels[i][0]] = binary_weights_matrix[i]
 
     similarity_map = {}
-
+    N = args.t
     while True:
         relevant_gestures = input("Enter the relevant gestures if any\n")
         if "none" in relevant_gestures:
