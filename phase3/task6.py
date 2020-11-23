@@ -2,6 +2,7 @@
 from appJar import gui
 from task3 import get_t_closest_gestures
 from task4 import get_updated_gestures
+from task5 import get_updated_gestures_task5
 
 app = None
 t = None
@@ -24,7 +25,7 @@ def submit_feedback():
         updated_results = get_updated_gestures(relevant_gestures, int(t), all_results)
     else:
         print("Calling PPR Feedback")
-        updated_results = get_updated_gestures(relevant_gestures, int(t), all_results)
+        # updated_results = get_updated_gestures_task5(relevant_gestures, irrelevant_gestures, int(t))
     app.stop()
     app = gui("Query interface")
     app.addLabel("l1", "Updated Query results")
