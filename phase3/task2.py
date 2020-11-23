@@ -69,8 +69,6 @@ def calc_accuracy(predicted, test) :
 
 
 def ppr_2(query_file, labels, vector_model, output_dir, user_option, custom_cost, k):
-    print("classification 2:")
-    number_of_dominant_features = 10
 
     task3.call_task3(vector_model, output_dir, user_option, 4,
                      "svd", custom_cost)  # construct gesture_gesture_similarity matrix
@@ -94,7 +92,7 @@ def ppr_2(query_file, labels, vector_model, output_dir, user_option, custom_cost
     for f in class1:
         column = name_column_map[f]
         restart_vector_class1[column][0] = 1
-        ppr_vector_class1 = ppr(normalized_adjacency_graph, restart_vector_class1)
+    ppr_vector_class1 = ppr(normalized_adjacency_graph, restart_vector_class1)
 
     class2 = ["249_words.csv", "250_words.csv", "251_words.csv", "252_words.csv", "253_words.csv", "254_words.csv",
               "255_words.csv",
@@ -103,7 +101,7 @@ def ppr_2(query_file, labels, vector_model, output_dir, user_option, custom_cost
     for f in class2:
         column = name_column_map[f]
         restart_vector_class2[column][0] = 1
-        ppr_vector_class2 = ppr(normalized_adjacency_graph, restart_vector_class2)
+    ppr_vector_class2 = ppr(normalized_adjacency_graph, restart_vector_class2)
 
     class3 = ["580_words.csv", "581_words.csv", "582_words.csv", "583_words.csv", "584_words.csv", "585_words.csv",
               "586_words.csv",
@@ -112,7 +110,7 @@ def ppr_2(query_file, labels, vector_model, output_dir, user_option, custom_cost
     for f in class3:
         column = name_column_map[f]
         restart_vector_class3[column][0] = 1
-        ppr_vector_class3 = ppr(normalized_adjacency_graph, restart_vector_class3)
+    ppr_vector_class3 = ppr(normalized_adjacency_graph, restart_vector_class3)
 
     query_file = query_file.replace(".csv", "_words.csv")
     user_specified_column = name_column_map[query_file]
@@ -121,8 +119,8 @@ def ppr_2(query_file, labels, vector_model, output_dir, user_option, custom_cost
     label_map = {0: "vattene", 1: "combinato", 2: "daccordo"}
     label = scores.index(max(scores))
     # print(scores)
-    print("Classification_2 result:", label_map[label])
-    print("accuracy:")
+    print("Based on PPR classifier-2 for given query the class label", label_map[label])
+    # --------------------------------------------- CALCULATING ACCURACY----------------------------------
     labels.tolist()
     class_map = {}
     for label in labels:
@@ -138,7 +136,8 @@ def ppr_2(query_file, labels, vector_model, output_dir, user_option, custom_cost
         query_file = f.replace("_words.csv", "")
         if (label == class_map[int(query_file)]):
             count += 1
-    print(count / len(name_column_map))
+    accuracy_ppr_classifier_2 = count / len(name_column_map)
+    print("Accuracy score: ", accuracy_ppr_classifier_2)
 
 
 def ppr_classifier(query_file, labels, vector_model, output_dir, user_option, custom_cost, k):
@@ -176,7 +175,6 @@ def ppr_classifier(query_file, labels, vector_model, output_dir, user_option, cu
     dominant_feature_indices = dominant_feature_indices[:number_of_dominant_features]
 
     dominant_features = [column_file_map[i].replace("_words.csv", "") for i in dominant_feature_indices]
-    print("Dominant features ", dominant_features)
 
     labels.tolist()
     class_map = {}
@@ -188,7 +186,7 @@ def ppr_classifier(query_file, labels, vector_model, output_dir, user_option, cu
     print("Based on PPR classifier for given query the class label is ",
           max(set(dominant_features_class), key=dominant_features_class.count))
 
-    print("accuracy:")
+    # ------------------------------- CALCULATING ACCURACY ----------------------------------------
     count = 0
     for f in name_column_map.keys():
         # query_file = f.replace(".csv", "_words.csv")
@@ -209,7 +207,10 @@ def ppr_classifier(query_file, labels, vector_model, output_dir, user_option, cu
         query_file = f.replace("_words.csv", "")
         if (label == class_map[int(query_file)]):
             count += 1
-    print(count / len(name_column_map))
+        # print("for gesture ", f ," class label is ", label)
+    print("Out of ", len(name_column_map), ",", count, "  are correctly classified!")
+    accuracy_ppr_classifier = count / len(name_column_map)
+    print("Accuracy score: ", accuracy_ppr_classifier)
 
 
 if __name__ == '__main__':
@@ -227,7 +228,7 @@ if __name__ == '__main__':
     parser.add_argument('--shift', type=int, help='shift length', default=3, required=False)
     parser.add_argument('--resolution', type=int, help='resolution', default=3, required=False)
     parser.add_argument('--output_dir', help='output directory', default='../outputs/', required=False)
-    parser.add_argument('--vector_model', help='vector model', default='tf_idf', required=False)
+    parser.add_argument('--vector_model', help='vector model', default='tf', required=False)
     parser.add_argument('--custom_cost', type=bool, help='Custom cost for edit distance', default = False, required=False)
 
     args = parser.parse_args()
@@ -236,7 +237,7 @@ if __name__ == '__main__':
     task0b.call_task0b(args.output_dir)
     task1.call_task1(args.output_dir, args.vector_model, args.user_option, args.k)
 
-    vectors = np.array(pd.read_csv(args.output_dir + args.vector_model + "_" + args.user_option + "_vectors.csv", header = None))
+    vectors = np.array(pd.read_csv(args.output_dir + args.vector_model + "_" + args.user_option + "_vectors.csv", header = None, low_memory=False))
     filenames = vectors[:, 0]
 
     labels_raw = np.array(pd.read_csv(args.gestures_dir + 'all_labels.csv', index_col=None, header=None))
@@ -248,7 +249,9 @@ if __name__ == '__main__':
     print(labels_predicted)
     calc_accuracy(labels_predicted, labels_test)
 
+    print("PPR CLASSIFICATION - I")
     ppr_classifier(args.query_file, np.array(labels_raw), args.vector_model, args.output_dir, args.user_option,
                    args.custom_cost, args.k)
+    print("PPR CLASSIFICATION - II")
     ppr_2(args.query_file, np.array(labels_raw), args.vector_model, args.output_dir, args.user_option, args.custom_cost,
           args.k)
