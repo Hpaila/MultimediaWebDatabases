@@ -131,9 +131,14 @@ def ppr_2(query_file, labels, vector_model, output_dir, user_option, custom_cost
     accuracy_ppr_classifier_2 = count / len(name_column_map)
     print("Accuracy score: ", accuracy_ppr_classifier_2)
 
-def ppr_classifier(labels, vector_model, output_dir, user_option, custom_cost, k):
 
-    output_file = open(output_dir + "ppr_classification.txt", "w")
+def ppr_classifier(labels_train, vector_model, output_dir, user_option, custom_cost, k):
+
+    labels_train_dict = {}
+    for each in labels_train.tolist():
+        labels_train_dict[str(each[0])+"_words.csv"] = each[1]
+
+    output_file = open(output_dir + "ppr_classification.csv", "w")
 
     number_of_dominant_features = 10
 
@@ -149,36 +154,8 @@ def ppr_classifier(labels, vector_model, output_dir, user_option, custom_cost, k
     for index, filename in enumerate(column_file_map):
         name_column_map[filename] = index
 
-    # ---------------------------------------construct adjacency matrix ---------------------------------
-
-    labelled_gestures = ["1_words.csv", "2_words.csv", "3_words.csv", "4_words.csv", "5_words.csv", "6_words.csv", "7_words.csv",
-                         "8_words.csv", "9_words.csv", "10_words.csv", "11_words.csv", "12_words.csv", "13_words.csv",
-                         "14_words.csv", "15_words.csv", "16_words.csv", "17_words.csv", "18_words.csv", "19_words.csv",
-                         "20_words.csv", "21_words.csv", "22_words.csv", "23_words.csv","24_words.csv", "25_words.csv",
-                         "26_words.csv", "27_words.csv","28_words.csv", "29_words.csv", "30_words.csv", "31_words.csv", "249_words.csv","250_words.csv",
-                         "251_words.csv","252_words.csv","253_words.csv","254_words.csv","255_words.csv","256_words.csv","257_words.csv","258_words.csv",
-                         "259_words.csv","260_words.csv","261_words.csv","262_words.csv","263_words.csv","264_words.csv","265_words.csv","266_words.csv",
-                         "267_words.csv","268_words.csv","269_words.csv","270_words.csv","271_words.csv", "272_words.csv", "273_words.csv", "274_words.csv", "275_words.csv",
-              "276_words.csv", "277_words.csv", "278_words.csv","279_words.csv","559_words.csv", "560_words.csv", "561_words.csv","562_words.csv", "563_words.csv", "564_words.csv", "565_words.csv",
-              "566_words.csv","567_words.csv", "568_words.csv", "569_words.csv","570_words.csv", "571_words.csv", "572_words.csv", "573_words.csv", "574_words.csv", "575_words.csv",
-              "576_words.csv","577_words.csv", "578_words.csv", "579_words.csv","580_words.csv", "581_words.csv", "582_words.csv", "583_words.csv", "584_words.csv", "585_words.csv",
-              "586_words.csv","587_words.csv", "588_words.csv", "589_words.csv"]
-    labelled_gestures_classes = ['vattene', 'vattene', 'vattene', 'vattene', 'vattene', 'vattene', 'vattene', 'vattene', 'vattene',
-                                 'vattene', 'vattene', 'vattene', 'vattene', 'vattene', 'vattene', 'vattene', 'vattene', 'vattene',
-                                 'vattene', 'vattene', 'vattene', 'vattene', 'vattene', 'vattene', 'vattene', 'vattene', 'vattene',
-                                 'vattene', 'vattene', 'vattene', 'vattene', 'vattene', 'combinato', 'combinato', 'combinato', 'combinato',
-                                 'combinato', 'combinato', 'combinato', 'combinato', 'combinato', 'combinato', 'combinato', 'combinato',
-                                 'combinato', 'combinato', 'combinato', 'combinato', 'combinato', 'combinato', 'combinato', 'combinato',
-                                 'combinato', 'combinato', 'combinato', 'combinato', 'combinato', 'combinato', 'combinato', 'combinato',
-                                 'combinato', 'combinato', 'combinato', 'combinato', 'daccordo', 'daccordo', 'daccordo', 'daccordo', 'daccordo',
-                                 'daccordo', 'daccordo', 'daccordo', 'daccordo', 'daccordo', 'daccordo', 'daccordo', 'daccordo', 'daccordo',
-                                 'daccordo', 'daccordo', 'daccordo', 'daccordo', 'daccordo', 'daccordo', 'daccordo', 'daccordo', 'daccordo',
-                                 'daccordo', 'daccordo', 'daccordo', 'daccordo', 'daccordo', 'daccordo', 'daccordo', 'daccordo', 'daccordo']
-
-    file_name_class_label_map = {}
-    for j, file in enumerate(labelled_gestures):
-        file_name_class_label_map[file] = labelled_gestures_classes[j]
-
+    # ---------------------------------------run ppr for each unlabelled data ---------------------------------
+    labelled_gestures = [x for x in labels_train_dict.keys()]
     labelled_gesture_columns = [name_column_map[x]+1 for x in labelled_gestures]
 
     unlabelled_gestures = list(set(column_file_map) - set(labelled_gestures))
@@ -192,7 +169,7 @@ def ppr_classifier(labels, vector_model, output_dir, user_option, custom_cost, k
         adjacency_graph = similarity_matrix_df.loc[matrix_columns, matrix_columns]
         adjacency_graph = adjacency_graph.astype(dtype=float)
         # TODO: Do we have to consider only k most closest here?
-        # adjacency_graph = adjacency_graph * (adjacency_graph >= np.sort(adjacency_graph, axis=1)[:, [-k]])
+        adjacency_graph = adjacency_graph * (adjacency_graph >= np.sort(adjacency_graph, axis=1)[:, [-k]])
         normalized_adjacency_graph = sklearn.preprocessing.normalize(adjacency_graph, norm='l1', axis=0)
         vector_size = len(adjacency_graph)
         restart_vector = np.zeros((vector_size, 1))
@@ -203,7 +180,7 @@ def ppr_classifier(labels, vector_model, output_dir, user_option, custom_cost, k
         dominant_features_class = []
         for ranking, filename in dominant_file_names:
             if filename != column_file_map[c-1]:
-                dominant_features_class.append(file_name_class_label_map[filename])
+                dominant_features_class.append(labels_train_dict[filename])
 
         class_label = max(set(dominant_features_class), key=dominant_features_class.count)
         csv_write.writerow((unlabelled_gestures[c_index], class_label))
@@ -328,16 +305,16 @@ if __name__ == '__main__':
     task0a.call_task0a(args.gestures_dir, args.window, args.shift, args.resolution)
     task0b.call_task0b(args.output_dir)
     task1.call_task1(args.output_dir, args.vector_model, args.user_option, args.k)
-    
-    
+
+
     vectors = pd.read_csv(args.output_dir + args.vector_model + "_" + args.user_option + "_vectors.csv", header = None, low_memory=False)
     vectors = vectors.replace({0: r'(_words.csv)'}, { 0 : ""}, regex=True)
     vectors = np.array(vectors)
     filenames = vectors[:, 0]
-  
+
     labels_raw = np.array(pd.read_csv(args.gestures_dir + 'all_labels.csv', index_col=None, header=None))
     labels_train = np.array(pd.read_csv(args.gestures_dir + 'training_labels.csv', index_col = None, header=None))
-    
+
     vectors_train = []
     for l in labels_train :
         for v in vectors :
@@ -345,11 +322,11 @@ if __name__ == '__main__':
             if (n==v[0]) :
                 vectors_train.append(v)
                 break
-    
+
     vectors_test = []
     for v in vectors :
         for vt in vectors_train :
-            present = 0 
+            present = 0
             if np.array_equal(v, vt) :
                 present = 1
                 break
@@ -357,7 +334,7 @@ if __name__ == '__main__':
             vectors_test.append(v)
     vectors_train = np.array(vectors_train)
     vectors_test = np.array(vectors_test)
-    
+
     labels_test = []
     for v in vectors_test :
         for l in labels_raw :
@@ -365,17 +342,17 @@ if __name__ == '__main__':
                 labels_test.append(l)
                 break
     labels_test = np.array(labels_test)
-            
+
     labels_predicted = knn(vectors_train, vectors_test, labels_train, args.nn)
     labels_predicted = np.array(labels_predicted)
     print("K-nearest neighbours")
     calc_accuracy(labels_predicted[:,1], labels_test[:,1])
-        
-    
-    cmap, labels_train_int = labels_str_int(labels_train[:,1])    
+
+
+    cmap, labels_train_int = labels_str_int(labels_train[:,1])
     decisiontree = DecisionTreeClassifier(max_depth=10)
     decisiontree.fit(vectors_train[:,1:], labels_train_int)
-    
+
     #print(vectors_test[:,1:])
     labels_predicted = decisiontree.predict(vectors_test[:,1:])
     labels_predicted = labels_int_str(labels_predicted, cmap)
@@ -384,9 +361,8 @@ if __name__ == '__main__':
     calc_accuracy(labels_predicted, labels_test[:,1])
 
     print("PPR CLASSIFICATION - I")
-    ppr_classifier(np.array(labels_raw), args.vector_model, args.output_dir, args.user_option,
+    ppr_classifier(labels_train, args.vector_model, args.output_dir, args.user_option,
                    args.custom_cost, args.k)
     print("PPR CLASSIFICATION - II")
     ppr_2(args.query_file, np.array(labels_raw), args.vector_model, args.output_dir, args.user_option, args.custom_cost,
           args.k)
-    
