@@ -8,20 +8,6 @@ import sklearn
 
 from phase3.task1 import ppr
 
-'''
-gestures_dir = '../sample/'
-k = 20
-user_option = 'pca'
-
-window = 3
-shift =3
-resolution = 3
-output_dir = '../outputs/'
-vector_model = 'tf_idf'
-custom_cost = False
-'''
-
-
 def get_n_nearest(query_vector, vectors, nn):
     distances = {}
     for v in vectors:
@@ -319,10 +305,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create gesture words dictionary.')
     parser.add_argument('--query_file', help='Query file name', default = '250.csv', required=False)
 
-    parser.add_argument('--nn', type=int, help='number of neighbours', default = 10, required=False)
+    parser.add_argument('--nn', type=int, help='number of neighbours', default = 30, required=False)
 
     parser.add_argument('--gestures_dir', help='directory of input data', default = '../Phase3_data_for_report/', required=False)
-    parser.add_argument('--k', type=int, help='reduced vectors', default = 5, required=False)
+    parser.add_argument('--k', type=int, help='reduced vectors', default = 20, required=False)
     parser.add_argument('--user_option', help='Type of dimensionality reduction', default = 'pca', required=False)
 
     # optional parameters
@@ -346,7 +332,7 @@ if __name__ == '__main__':
     filenames = vectors[:, 0]
   
     labels_raw = np.array(pd.read_csv(args.gestures_dir + 'all_labels.csv', index_col=None, header=None))
-    labels_train = np.array(pd.read_csv('../sample_training_labels.csv', index_col = None, header=None))
+    labels_train = np.array(pd.read_csv(args.gestures_dir + 'training_labels.csv', index_col = None, header=None))
     
     vectors_train = []
     for l in labels_train :
@@ -392,7 +378,6 @@ if __name__ == '__main__':
     labels_predicted = np.array(labels_predicted)
     print("decision tree")
     calc_accuracy(labels_predicted, labels_test[:,1])
-    
     
     print("PPR CLASSIFICATION - I")
     ppr_classifier(args.query_file, np.array(labels_raw), args.vector_model, args.output_dir, args.user_option,
