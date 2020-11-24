@@ -32,7 +32,7 @@ def submit_feedback():
     updated_results = []
     if feedback_type == "Probabilistic Feedback":
         print("Calling Probabilistic Feedback")
-        updated_results = get_updated_gestures(relevant_gestures, int(t), all_results)
+        updated_results = get_updated_gestures(relevant_gestures, irrelevant_gestures, int(t), all_results)
     else:
         print("Calling PPR Feedback")
         updated_results = get_updated_gestures_task5(relevant_gestures, irrelevant_gestures, int(t), query_gesture)
