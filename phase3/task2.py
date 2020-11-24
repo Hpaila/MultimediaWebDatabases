@@ -113,23 +113,24 @@ def ppr_2(query_file, labels, vector_model, output_dir, user_option, custom_cost
     # print(scores)
     print("Based on PPR classifier-2 for given query the class label", label_map[label])
     # --------------------------------------------- CALCULATING ACCURACY----------------------------------
-    labels.tolist()
-    class_map = {}
-    for label in labels:
-        class_map[label[0]] = label[1]
-    count = 0
-    for f in name_column_map.keys():
-        # query_file = f.replace(".csv", "_words.csv")
-        column = name_column_map[f]
-        scores = [ppr_vector_class1[column][0], ppr_vector_class2[column][0],
-                  ppr_vector_class3[column][0]]
-        label_map = {0: "vattene", 1: "combinato", 2: "daccordo"}
-        label = label_map[scores.index(max(scores))]
-        query_file = f.replace("_words.csv", "")
-        if (label == class_map[query_file]):
-            count += 1
-    accuracy_ppr_classifier_2 = count / len(name_column_map)
-    print("Accuracy score: ", accuracy_ppr_classifier_2)
+    # if accuracy == 1:
+    #     labels.tolist()
+    #     class_map = {}
+    #     for label in labels:
+    #         class_map[label[0]] = label[1]
+    #     count = 0
+    #     for f in name_column_map.keys():
+    #         # query_file = f.replace(".csv", "_words.csv")
+    #         column = name_column_map[f]
+    #         scores = [ppr_vector_class1[column][0], ppr_vector_class2[column][0],
+    #                   ppr_vector_class3[column][0]]
+    #         label_map = {0: "vattene", 1: "combinato", 2: "daccordo"}
+    #         label = label_map[scores.index(max(scores))]
+    #         query_file = f.replace("_words.csv", "")
+    #         if (label == class_map[query_file]):
+    #             count += 1
+    #     accuracy_ppr_classifier_2 = count / len(name_column_map)
+    #     print("Accuracy score: ", accuracy_ppr_classifier_2)
 
 
 def ppr_classifier(labels_train, vector_model, output_dir, user_option, custom_cost, k):
@@ -164,9 +165,13 @@ def ppr_classifier(labels_train, vector_model, output_dir, user_option, custom_c
     csv_write = csv.writer(output_file)
 
     for c_index, c in enumerate(unlabelled_gesture_columns):
-
+        similarity_matrix_df = pd.read_csv(output_dir + "similarity_matrix_" + user_option + ".csv",low_memory=False)
         matrix_columns = labelled_gesture_columns + [c]
-        adjacency_graph = similarity_matrix_df.loc[matrix_columns, matrix_columns]
+        #print("file",column_file_map[c-1])
+        gestures = labelled_gestures + [column_file_map[c-1]]
+        adjacency_graph = similarity_matrix_df.loc[:,["Nothing"]+gestures]
+        adjacency_graph = adjacency_graph.loc[adjacency_graph["Nothing"].isin(gestures)]
+        adjacency_graph = np.array(adjacency_graph)[:,1:]
         adjacency_graph = adjacency_graph.astype(dtype=float)
         # TODO: Do we have to consider only k most closest here?
         adjacency_graph = adjacency_graph * (adjacency_graph >= np.sort(adjacency_graph, axis=1)[:, [-k]])
@@ -176,7 +181,7 @@ def ppr_classifier(labels_train, vector_model, output_dir, user_option, custom_c
         restart_vector[vector_size-1][0] = 1
         ppr_vector = ppr(normalized_adjacency_graph, restart_vector)
         matrix_file_names = [column_file_map[k-1] for k in matrix_columns]
-        dominant_file_names = sorted(zip(ppr_vector, matrix_file_names), key=lambda v: v[0], reverse=True)
+        dominant_file_names = sorted(zip(ppr_vector, matrix_file_names), key=lambda v: v[0], reverse=True)[:10]
         dominant_features_class = []
         for ranking, filename in dominant_file_names:
             if filename != column_file_map[c-1]:
@@ -184,6 +189,7 @@ def ppr_classifier(labels_train, vector_model, output_dir, user_option, custom_c
 
         class_label = max(set(dominant_features_class), key=dominant_features_class.count)
         csv_write.writerow((unlabelled_gestures[c_index], class_label))
+
 
 class Node:
     def __init__(self, predicted_class):
