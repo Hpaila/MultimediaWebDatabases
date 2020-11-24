@@ -28,7 +28,7 @@ def ppr(normalized_graph, restart_vector):
     max_iterations = 0
     new_steady_state_prob = restart_vector
     steady_state_prob = np.zeros(restart_vector.shape)
-    while max_iterations < 200 and not np.equal(steady_state_prob, new_steady_state_prob).all():
+    while max_iterations < 1000 and not np.equal(steady_state_prob, new_steady_state_prob).all():
         steady_state_prob = new_steady_state_prob
         new_steady_state_prob = ((1 - c) * np.dot(normalized_graph, steady_state_prob)) + (c * restart_vector)
         max_iterations += 1
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create gesture words dictionary.')
 
     parser.add_argument('--gestures_dir', help='directory of input data', required=True)
-    parser.add_argument('--k', type=int, help='k most similar gestures', required=True)
+    parser.add_argument('--k', type=int, help='adjacency graph degree', required=True)
     parser.add_argument('--user_option', help='Type of dimensionality reduction', default="pca", required=True)
     parser.add_argument('--user_option_k', type =int, help='Number of reduced dimensions', default=20, required=True)
     parser.add_argument('--n', nargs='+', help='User specified gestures or seed data', required=False)
@@ -69,6 +69,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    if args.n:
+        args.n = [x + "_words.csv" for x in args.n]
     task0a.call_task0a(args.gestures_dir, args.window, args.shift, args.resolution)  # construct words from data
     task0b.call_task0b(args.output_dir)  # construct tf and tf-idf
     task1.call_task1(args.output_dir, args.vector_model, args.user_option, args.user_option_k)  # get for pca trained model
@@ -78,7 +80,7 @@ if __name__ == '__main__':
     # -------------------------------------- Personalized page rank algorithm  ----------------------------------------
 
     similarity_matrix = np.array(
-        pd.read_csv(args.output_dir + "similarity_matrix_" + args.user_option + ".csv", header=None))
+        pd.read_csv(args.output_dir + "similarity_matrix_" + args.user_option + ".csv", header=None, low_memory=False))
 
     adjacency_graph = construct_adjacency_graph(np.array(similarity_matrix[1:, 1:].tolist(), dtype=float),
                                                 args.k)  # construct adjacency graph
@@ -117,4 +119,4 @@ if __name__ == '__main__':
     print("Dominant features ", dominant_features)
 
     # -----------------------------------------------  visualize dominant features ------------------------------------
-    # visualize_dominant_features(args.gestures_dir, dominant_features)
+    visualize_dominant_features(args.gestures_dir, dominant_features)
