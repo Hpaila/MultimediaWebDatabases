@@ -8,6 +8,19 @@ import sklearn
 
 from phase3.task1 import ppr
 
+'''
+gestures_dir = '../sample/'
+k = 20
+user_option = 'pca'
+
+window = 3
+shift =3
+resolution = 3
+output_dir = '../outputs/'
+vector_model = 'tf_idf'
+custom_cost = False
+'''
+
 
 def get_n_nearest(query_vector, vectors, nn):
     distances = {}
@@ -308,8 +321,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--nn', type=int, help='number of neighbours', default = 10, required=False)
 
-    parser.add_argument('--gestures_dir', help='directory of input data', default = '../sample/', required=False)
-    parser.add_argument('--k', type=int, help='reduced vectors', default = 20, required=False)
+    parser.add_argument('--gestures_dir', help='directory of input data', default = '../Phase3_data_for_report/', required=False)
+    parser.add_argument('--k', type=int, help='reduced vectors', default = 5, required=False)
     parser.add_argument('--user_option', help='Type of dimensionality reduction', default = 'pca', required=False)
 
     # optional parameters
@@ -331,9 +344,7 @@ if __name__ == '__main__':
     vectors = vectors.replace({0: r'(_words.csv)'}, { 0 : ""}, regex=True)
     vectors = np.array(vectors)
     filenames = vectors[:, 0]
-<<<<<<< HEAD
-    
-    
+  
     labels_raw = np.array(pd.read_csv(args.gestures_dir + 'all_labels.csv', index_col=None, header=None))
     labels_train = np.array(pd.read_csv('../sample_training_labels.csv', index_col = None, header=None))
     
@@ -365,17 +376,9 @@ if __name__ == '__main__':
                 break
     labels_test = np.array(labels_test)
             
-    
-=======
-
-    labels_raw = np.array(pd.read_csv(args.gestures_dir + 'all_labels.csv', index_col=None, header=None,low_memory=False))
-    labels_dict = {l[0] : l[1] for l in labels_raw}
-    labels_ordered = [labels_dict[int(v[0].split('_')[0])] for v in vectors]
-
-    vectors_train, vectors_test, labels_train, labels_test = train_test_split(vectors, labels_ordered, test_size=0.33, random_state=42)
->>>>>>> ce477e3cf777c41a85e97842fe98dd81a76ddb57
     labels_predicted = knn(vectors_train, vectors_test, labels_train, args.nn)
     labels_predicted = np.array(labels_predicted)
+    print("K-nearest neighbours")
     calc_accuracy(labels_predicted[:,1], labels_test[:,1])
         
     
@@ -387,7 +390,9 @@ if __name__ == '__main__':
     labels_predicted = decisiontree.predict(vectors_test[:,1:])
     labels_predicted = labels_int_str(labels_predicted, cmap)
     labels_predicted = np.array(labels_predicted)
+    print("decision tree")
     calc_accuracy(labels_predicted, labels_test[:,1])
+    
     
     print("PPR CLASSIFICATION - I")
     ppr_classifier(args.query_file, np.array(labels_raw), args.vector_model, args.output_dir, args.user_option,
@@ -395,3 +400,4 @@ if __name__ == '__main__':
     print("PPR CLASSIFICATION - II")
     ppr_2(args.query_file, np.array(labels_raw), args.vector_model, args.output_dir, args.user_option, args.custom_cost,
           args.k)
+    
