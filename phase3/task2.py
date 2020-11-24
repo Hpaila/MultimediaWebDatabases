@@ -5,22 +5,8 @@ import numpy as np
 from scipy.spatial import distance
 from sklearn.model_selection import train_test_split
 import sklearn
-
-from phase3.task1 import ppr
 import csv
-'''
-gestures_dir = '../sample/'
-k = 20
-user_option = 'pca'
-
-window = 3
-shift =3
-resolution = 3
-output_dir = '../outputs/'
-vector_model = 'tf_idf'
-custom_cost = False
-'''
-
+from phase3.task1 import ppr
 
 def get_n_nearest(query_vector, vectors, nn):
     distances = {}
@@ -323,10 +309,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create gesture words dictionary.')
     parser.add_argument('--query_file', help='Query file name', default = '250.csv', required=False)
 
-    parser.add_argument('--nn', type=int, help='number of neighbours', default = 10, required=False)
+    parser.add_argument('--nn', type=int, help='number of neighbours', default = 30, required=False)
 
     parser.add_argument('--gestures_dir', help='directory of input data', default = '../Phase3_data_for_report/', required=False)
-    parser.add_argument('--k', type=int, help='reduced vectors', default = 15, required=False)
+    parser.add_argument('--k', type=int, help='reduced vectors', default = 20, required=False)
     parser.add_argument('--user_option', help='Type of dimensionality reduction', default = 'pca', required=False)
 
     # optional parameters
@@ -342,7 +328,7 @@ if __name__ == '__main__':
     task0a.call_task0a(args.gestures_dir, args.window, args.shift, args.resolution)
     task0b.call_task0b(args.output_dir)
     task1.call_task1(args.output_dir, args.vector_model, args.user_option, args.k)
-
+    
     
     vectors = pd.read_csv(args.output_dir + args.vector_model + "_" + args.user_option + "_vectors.csv", header = None, low_memory=False)
     vectors = vectors.replace({0: r'(_words.csv)'}, { 0 : ""}, regex=True)
@@ -350,8 +336,8 @@ if __name__ == '__main__':
     filenames = vectors[:, 0]
   
     labels_raw = np.array(pd.read_csv(args.gestures_dir + 'all_labels.csv', index_col=None, header=None))
-    labels_train = np.array(pd.read_csv('../sample_training_labels.csv', index_col = None, header=None))
-
+    labels_train = np.array(pd.read_csv(args.gestures_dir + 'training_labels.csv', index_col = None, header=None))
+    
     vectors_train = []
     for l in labels_train :
         for v in vectors :
@@ -359,11 +345,11 @@ if __name__ == '__main__':
             if (n==v[0]) :
                 vectors_train.append(v)
                 break
-
+    
     vectors_test = []
     for v in vectors :
         for vt in vectors_train :
-            present = 0
+            present = 0 
             if np.array_equal(v, vt) :
                 present = 1
                 break
@@ -371,7 +357,7 @@ if __name__ == '__main__':
             vectors_test.append(v)
     vectors_train = np.array(vectors_train)
     vectors_test = np.array(vectors_test)
-
+    
     labels_test = []
     for v in vectors_test :
         for l in labels_raw :
@@ -379,17 +365,17 @@ if __name__ == '__main__':
                 labels_test.append(l)
                 break
     labels_test = np.array(labels_test)
-
+            
     labels_predicted = knn(vectors_train, vectors_test, labels_train, args.nn)
     labels_predicted = np.array(labels_predicted)
     print("K-nearest neighbours")
     calc_accuracy(labels_predicted[:,1], labels_test[:,1])
-
-
-    cmap, labels_train_int = labels_str_int(labels_train[:,1])
-    decisiontree = DecisionTreeClassifier(max_depth = 10)
+        
+    
+    cmap, labels_train_int = labels_str_int(labels_train[:,1])    
+    decisiontree = DecisionTreeClassifier(max_depth=10)
     decisiontree.fit(vectors_train[:,1:], labels_train_int)
-
+    
     #print(vectors_test[:,1:])
     labels_predicted = decisiontree.predict(vectors_test[:,1:])
     labels_predicted = labels_int_str(labels_predicted, cmap)
@@ -397,11 +383,10 @@ if __name__ == '__main__':
     print("decision tree")
     calc_accuracy(labels_predicted, labels_test[:,1])
 
-    print("training labels", labels_train)
-    
     print("PPR CLASSIFICATION - I")
     ppr_classifier(np.array(labels_raw), args.vector_model, args.output_dir, args.user_option,
                    args.custom_cost, args.k)
     print("PPR CLASSIFICATION - II")
     ppr_2(args.query_file, np.array(labels_raw), args.vector_model, args.output_dir, args.user_option, args.custom_cost,
           args.k)
+    
