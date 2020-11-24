@@ -8,19 +8,6 @@ import sklearn
 
 from phase3.task1 import ppr
 
-'''
-gestures_dir = '../sample/'
-k = 20
-user_option = 'pca'
-
-window = 3
-shift =3
-resolution = 3
-output_dir = '../outputs/'
-vector_model = 'tf_idf'
-custom_cost = False
-'''
-
 
 def get_n_nearest(query_vector, vectors, nn):
     distances = {}
@@ -48,12 +35,14 @@ def knn(vectors_train, vectors_test, labels_train, nn) :
     predictions = []
     filenames = vectors_train[:,0]
     filenames = filenames[:, np.newaxis]
-    labels_train = np.array(labels_train)
+    #labels_train = np.array(labels_train)
+    labels_train = labels_train[:,1]
     labels_train = labels_train[:, np.newaxis]
     vectors = np.concatenate((filenames, labels_train, vectors_train[:,1:]), axis=1)
 
     for v in vectors_test :
         neighbours = get_n_nearest(v[1:], vectors, nn)
+        #print(neighbours)
         mode = calc_mode(neighbours)
         predictions.append([v[0], mode])
 
@@ -62,7 +51,7 @@ def knn(vectors_train, vectors_test, labels_train, nn) :
 def calc_accuracy(predicted, test) :
     fp = 0
     for i in range(len(test)) :
-        if(predicted[i][1]==test[i]) :
+        if(predicted[i]==test[i]) :
             fp += 1
     accuracy = fp / len(test)
     print("Accuracy : ", accuracy)
@@ -216,11 +205,107 @@ def ppr_classifier(query_file, labels, vector_model, output_dir, user_option, cu
     accuracy_ppr_classifier = count / len(name_column_map)
     print("Accuracy score: ", accuracy_ppr_classifier)
 
+class Node:
+    def __init__(self, predicted_class):
+        self.predicted_class = predicted_class
+        self.feature_index = 0
+        self.threshold = 0
+        self.left = None
+        self.right = None
 
+
+class DecisionTreeClassifier:
+    def __init__(self, max_depth=None):
+        self.max_depth = max_depth
+
+    def fit(self, X, y):
+        self.n_classes_ = len(set(y))        
+        self.n_features_ = X.shape[1]
+        self.tree_ = self._grow_tree(X, y)
+
+    def predict(self, X):
+        return [self._predict(inputs) for inputs in X]
+
+    def _best_split(self, X, y):
+        m = y.size
+        if m <= 1:
+            return None, None
+        num_parent = [np.sum(y == c) for c in range(self.n_classes_)]
+        best_gini = 1.0 - sum((n / m) ** 2 for n in num_parent)
+        best_idx, best_thr = None, None
+        for idx in range(self.n_features_):
+            thresholds, classes = zip(*sorted(zip(X[:, idx], y)))
+            num_left = [0] * self.n_classes_
+            num_right = num_parent.copy()
+            for i in range(1, m):
+                c = classes[i - 1]
+                num_left[c] += 1
+                num_right[c] -= 1
+                gini_left = 1.0 - sum(
+                    (num_left[x] / i) ** 2 for x in range(self.n_classes_)
+                )
+                gini_right = 1.0 - sum(
+                    (num_right[x] / (m - i)) ** 2 for x in range(self.n_classes_)
+                )
+                gini = (i * gini_left + (m - i) * gini_right) / m
+                if thresholds[i] == thresholds[i - 1]:
+                    continue
+                if gini < best_gini:
+                    best_gini = gini
+                    best_idx = idx
+                    best_thr = (thresholds[i] + thresholds[i - 1]) / 2
+        return best_idx, best_thr
+
+    def _grow_tree(self, X, y, depth=0):
+        num_samples_per_class = [np.sum(y == i) for i in range(self.n_classes_)]
+        predicted_class = np.argmax(num_samples_per_class)
+        node = Node(predicted_class=predicted_class)
+        if depth < self.max_depth:
+            idx, thr = self._best_split(X, y)
+            if idx is not None:
+                indices_left = X[:, idx] < thr
+                X_left, y_left = X[indices_left], y[indices_left]
+                X_right, y_right = X[~indices_left], y[~indices_left]
+                node.feature_index = idx
+                node.threshold = thr
+                node.left = self._grow_tree(X_left, y_left, depth + 1)
+                node.right = self._grow_tree(X_right, y_right, depth + 1)
+        return node
+
+    def _predict(self, inputs):
+        node = self.tree_
+        while node.left:
+            if inputs[node.feature_index] < node.threshold:
+                node = node.left
+            else:
+                node = node.right
+        return node.predicted_class
+
+def labels_str_int(labels) :
+    classes = {}
+    labels_int = []
+    count = 0
+    for i in range(labels.size) :
+        if labels[i] not in classes :
+            classes[labels[i]] = count
+            count += 1
+        labels_int.append(classes[labels[i]])
+        
+    return classes, np.array(labels_int)
+
+def labels_int_str(labels, cmap) :
+    labels_str = []
+    for l in labels :
+        for c in cmap :
+            if cmap[c]==l :
+                labels_str.append(str(c))
+    return labels_str
+        
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Create gesture words dictionary.')
     parser.add_argument('--query_file', help='Query file name', default = '250.csv', required=False)
+
     parser.add_argument('--nn', type=int, help='number of neighbours', default = 10, required=False)
 
     parser.add_argument('--gestures_dir', help='directory of input data', default = '../sample/', required=False)
@@ -240,19 +325,70 @@ if __name__ == '__main__':
     task0a.call_task0a(args.gestures_dir, args.window, args.shift, args.resolution)
     task0b.call_task0b(args.output_dir)
     task1.call_task1(args.output_dir, args.vector_model, args.user_option, args.k)
-
-    vectors = np.array(pd.read_csv(args.output_dir + args.vector_model + "_" + args.user_option + "_vectors.csv", header = None, low_memory=False))
+    
+    
+    vectors = pd.read_csv(args.output_dir + args.vector_model + "_" + args.user_option + "_vectors.csv", header = None, low_memory=False)
+    vectors = vectors.replace({0: r'(_words.csv)'}, { 0 : ""}, regex=True)
+    vectors = np.array(vectors)
     filenames = vectors[:, 0]
+<<<<<<< HEAD
+    
+    
+    labels_raw = np.array(pd.read_csv(args.gestures_dir + 'all_labels.csv', index_col=None, header=None))
+    labels_train = np.array(pd.read_csv('../sample_training_labels.csv', index_col = None, header=None))
+    
+    vectors_train = []
+    for l in labels_train :
+        for v in vectors :
+            n = str(l[0])
+            if (n==v[0]) :
+                vectors_train.append(v)
+                break
+    
+    vectors_test = []
+    for v in vectors :
+        for vt in vectors_train :
+            present = 0 
+            if np.array_equal(v, vt) :
+                present = 1
+                break
+        if not present :
+            vectors_test.append(v)
+    vectors_train = np.array(vectors_train)
+    vectors_test = np.array(vectors_test)
+    
+    labels_test = []
+    for v in vectors_test :
+        for l in labels_raw :
+            if(v[0]==l[0]) :
+                labels_test.append(l)
+                break
+    labels_test = np.array(labels_test)
+            
+    
+=======
 
     labels_raw = np.array(pd.read_csv(args.gestures_dir + 'all_labels.csv', index_col=None, header=None,low_memory=False))
     labels_dict = {l[0] : l[1] for l in labels_raw}
     labels_ordered = [labels_dict[int(v[0].split('_')[0])] for v in vectors]
 
     vectors_train, vectors_test, labels_train, labels_test = train_test_split(vectors, labels_ordered, test_size=0.33, random_state=42)
+>>>>>>> ce477e3cf777c41a85e97842fe98dd81a76ddb57
     labels_predicted = knn(vectors_train, vectors_test, labels_train, args.nn)
-    print(labels_predicted)
-    calc_accuracy(labels_predicted, labels_test)
-
+    labels_predicted = np.array(labels_predicted)
+    calc_accuracy(labels_predicted[:,1], labels_test[:,1])
+        
+    
+    cmap, labels_train_int = labels_str_int(labels_train[:,1])    
+    decisiontree = DecisionTreeClassifier(max_depth = 10)
+    decisiontree.fit(vectors_train[:,1:], labels_train_int)
+    
+    #print(vectors_test[:,1:])
+    labels_predicted = decisiontree.predict(vectors_test[:,1:])
+    labels_predicted = labels_int_str(labels_predicted, cmap)
+    labels_predicted = np.array(labels_predicted)
+    calc_accuracy(labels_predicted, labels_test[:,1])
+    
     print("PPR CLASSIFICATION - I")
     ppr_classifier(args.query_file, np.array(labels_raw), args.vector_model, args.output_dir, args.user_option,
                    args.custom_cost, args.k)
