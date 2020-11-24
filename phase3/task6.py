@@ -61,6 +61,7 @@ def search():
     global app
     global t
     global feedback_type
+    global query_gesture
     query_gesture = app.getEntry("Enter the query gesture")
     query_gesture = query_gesture + "_words.csv"
 
