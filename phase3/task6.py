@@ -67,8 +67,14 @@ def search():
 
     t = app.getEntry("Enter the number of results to be returned")
 
-    initial_search_results = get_t_closest_gestures(6, 3, "outputs/vectors/tf_idf_vectors.csv", int(t), query_gesture)
-    initial_search_results = initial_result_task5("../outputs/tf_idf_pca_vectors.csv", int(t), query_gesture)
+    initial_search_results = []
+    if feedback_type == "Probabilistic Feedback":
+        print("Calling Probabilistic Feedback")
+        initial_search_results = get_t_closest_gestures(6, 3, "outputs/vectors/tf_idf_vectors.csv", int(t), query_gesture)
+    else:
+        print("Calling PPR Feedback")
+        initial_search_results = initial_result_task5("outputs/tf_idf_pca_vectors.csv", int(t), query_gesture)
+ 
     search_results_map = {}
     for res in initial_search_results:
         search_results_map[res] = False
