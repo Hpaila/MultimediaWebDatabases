@@ -42,9 +42,11 @@ def submit_feedback():
     app.setFont(20)
     app.startScrollPane("Scroll Pane")
     app.startFrame("Relevant", row=0, column=0)
+    app.setInPadding([20,20])
     app.addProperties("Select Relevant", updated_results_map)
     app.stopFrame()
     app.startFrame("Irrelevant", row=0, column=1)
+    app.setInPadding([20,20])
     app.addProperties("Select Irrelevant", updated_results_map)
     app.stopFrame()
     app.stopScrollPane()
@@ -56,7 +58,7 @@ def search():
     global app
     global t
     global feedback_type
-    query_gesture = app.getEntry("Enter the gesture")
+    query_gesture = app.getEntry("Enter the query gesture")
     query_gesture = query_gesture + "_words.csv"
 
     t = app.getEntry("Enter the number of results to be returned")
@@ -76,9 +78,11 @@ def search():
 
     app.startScrollPane("Scroll Pane")
     app.startFrame("Relevant", row=0, column=0)
+    app.setInPadding([20,20])
     app.addProperties("Select Relevant", search_results_map)
     app.stopFrame()
     app.startFrame("Irrelevant", row=0, column=1)
+    app.setInPadding([20,20])
     app.addProperties("Select Irrelevant", search_results_map)
     app.stopFrame()
     app.stopScrollPane()
@@ -88,7 +92,7 @@ def search():
 # create a GUI variable called app
 app = gui("Query interface")
 
-app.addLabelEntry("Enter the gesture")
+app.addLabelEntry("Enter the query gesture")
 app.addLabelEntry("Enter the number of results to be returned")
 app.setFont(18)
 app.addRadioButton("relevance_feedback_type", "Probabilistic Feedback")
