@@ -119,4 +119,4 @@ if __name__ == '__main__':
     print("Dominant features ", dominant_features)
 
     # -----------------------------------------------  visualize dominant features ------------------------------------
-    # visualize_dominant_features(args.gestures_dir, dominant_features)
+    visualize_dominant_features(args.gestures_dir, dominant_features)
