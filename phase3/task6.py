@@ -31,7 +31,6 @@ def submit_feedback():
     else:
         print("Calling PPR Feedback")
         updated_results = get_updated_gestures_task5(relevant_gestures, irrelevant_gestures, int(t), query_gesture)
-        # updated_results = get_updated_gestures_task5(relevant_gestures, irrelevant_gestures, int(t))
 
     updated_results_map = {}
     for res in updated_results:
@@ -66,6 +65,7 @@ def search():
     query_gesture = query_gesture + "_words.csv"
 
     t = app.getEntry("Enter the number of results to be returned")
+    feedback_type = app.getRadioButton("relevance_feedback_type")
 
     initial_search_results = []
     if feedback_type == "Probabilistic Feedback":
@@ -78,7 +78,6 @@ def search():
     search_results_map = {}
     for res in initial_search_results:
         search_results_map[res] = False
-    feedback_type = app.getRadioButton("relevance_feedback_type")
     app.stop()
     app = gui("Query interface")
     app.addLabel("l1", "Query results")
