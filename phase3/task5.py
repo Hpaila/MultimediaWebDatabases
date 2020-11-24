@@ -7,6 +7,8 @@ from phase3.task1 import ppr
 
 
 def get_updated_gestures_task5(relevant_gestures, irrelevant_gestures, t, query_gesture):
+    print(query_gesture)
+
     data_file_name = "../outputs/tf_idf_pca_vectors.csv"
     similarity_matrix_file_name = "../outputs/similarity_matrix_pca.csv"
     data_matrix = np.array(pd.read_csv(data_file_name, header=None))
@@ -18,17 +20,19 @@ def get_updated_gestures_task5(relevant_gestures, irrelevant_gestures, t, query_
     irrelevant_gestures_vector = np.zeros((1, len(data_matrix[0]) - 1), dtype=object)
     relevant_gestures_vector = np.zeros((1, len(data_matrix[0]) - 1), dtype=object)
     query_gesture_values = data_matrix[query_gesture_row_index, 1:].astype(np.float)
-    for gesture in relevant_gestures:
-            gesture_row_index = np.where(data_matrix == gesture)[0][0]
-            relevant_gestures_vector = np.add(relevant_gestures_vector, data_matrix[gesture_row_index, 1:].astype(np.float))
-            relevant_gesture_row_indices.append(gesture_row_index)
-    relevant_gestures_vector = (1 / (len(relevant_gestures))) * relevant_gestures_vector
+    if relevant_gestures:
+        for gesture in relevant_gestures:
+                gesture_row_index = np.where(data_matrix == gesture)[0][0]
+                relevant_gestures_vector = np.add(relevant_gestures_vector, data_matrix[gesture_row_index, 1:].astype(np.float))
+                relevant_gesture_row_indices.append(gesture_row_index)
+        relevant_gestures_vector = (1 / (len(relevant_gestures))) * relevant_gestures_vector
 
-    for gesture in irrelevant_gestures:
-            # print(np.where(data_matrix == gesture)[0])
-            gesture_row_index = np.where(data_matrix == gesture)[0][0]
-            irrelevant_gestures_vector = np.add(irrelevant_gestures_vector, data_matrix[gesture_row_index, 1:].astype(np.float))
-    irrelevant_gestures_vector = (-1 / len(irrelevant_gestures)) * irrelevant_gestures_vector
+    if irrelevant_gestures:
+        for gesture in irrelevant_gestures:
+                # print(np.where(data_matrix == gesture)[0])
+                gesture_row_index = np.where(data_matrix == gesture)[0][0]
+                irrelevant_gestures_vector = np.add(irrelevant_gestures_vector, data_matrix[gesture_row_index, 1:].astype(np.float))
+        irrelevant_gestures_vector = (-1 / len(irrelevant_gestures)) * irrelevant_gestures_vector
 
     data_matrix[query_gesture_row_index, 1:] = np.add(query_gesture_values, relevant_gestures_vector,
                                                       irrelevant_gestures_vector)
