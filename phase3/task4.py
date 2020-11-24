@@ -11,9 +11,13 @@ def convert(val):
 
 def get_updated_gestures(relevant_gestures, irrelevant_gestures, t, initial_search_results):
     #By default, using tf_idf vectors
-    input_vectors_with_labels = np.array(pd.read_csv("outputs/vectors/tf_idf_vectors.csv"))
+    input_vectors_df = pd.read_csv("outputs/vectors/tf_idf_vectors.csv")
+    input_vectors_with_labels = np.array(input_vectors_df)
     input_vectors = input_vectors_with_labels[0:, 1:]
 
+    terms = input_vectors_df.columns
+    terms = terms[1:]
+    
     N = len(input_vectors)
     d = input_vectors.shape[1]
     
@@ -42,6 +46,12 @@ def get_updated_gestures(relevant_gestures, irrelevant_gestures, t, initial_sear
     p = np.divide(r + 0.5, R+1)
     u = np.divide(n + 0.5, N+1)
     log_values = np.log(np.divide(p*(1-u), u*(1-p)))
+
+    sorted_boost_values, sorted_terms = zip(*sorted(zip(log_values, terms), reverse=True))
+    with open("phase3/task4_output", "w") as f:
+        for i in range(len(sorted_boost_values)):
+            f.write(str(terms[i]) + " " + str(sorted_boost_values[i]))
+            f.write("\n")
 
     similarity_map = {}
     for i in range(len(input_vectors)):
