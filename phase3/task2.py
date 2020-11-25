@@ -56,7 +56,7 @@ def calc_accuracy(predicted, test) :
     print("Accuracy : ", accuracy)
 
 
-def ppr_2(query_file, labels, vector_model, output_dir, user_option, custom_cost, k):
+def ppr_2(query_file, labels_train, vector_model, output_dir, user_option, custom_cost, k):
     labels_train_dict = {}
     for each in labels_train.tolist():
         labels_train_dict[str(each[0]) + "_words.csv"] = each[1]
@@ -80,6 +80,7 @@ def ppr_2(query_file, labels, vector_model, output_dir, user_option, custom_cost
     unlabelled_gesture_columns = [name_column_map_all[x] + 1 for x in unlabelled_gestures]
 
     csv_write = csv.writer(output_file)
+    # TODO pick from file
     class1 = ["1_words.csv", "2_words.csv", "3_words.csv", "4_words.csv", "5_words.csv", "6_words.csv", "7_words.csv",
               "8_words.csv", "9_words.csv", "10_words.csv", "11_words.csv", "12_words.csv", "13_words.csv",
               "14_words.csv", "15_words.csv", "16_words.csv", "17_words.csv",
@@ -106,76 +107,54 @@ def ppr_2(query_file, labels, vector_model, output_dir, user_option, custom_cost
 
     for c_index, c in enumerate(unlabelled_gesture_columns):
         similarity_matrix_df = pd.read_csv(output_dir + "similarity_matrix_" + user_option + ".csv", low_memory=False)
-
-        print("file",column_file_map_all[c-1])
         gestures = labelled_gestures + [column_file_map_all[c - 1]]
         adjacency_graph = similarity_matrix_df.loc[:, ["Nothing"] + gestures]
         adjacency_graph = adjacency_graph.loc[adjacency_graph["Nothing"].isin(gestures)]
 
         column_file_map = list(adjacency_graph)
         column_file_map = column_file_map[1:]# give a column number, return file name
-        # print(column_file_map)
+
         name_column_map = dict()  # give a filename, returns the row index
         for index, filename in enumerate(column_file_map):
             name_column_map[filename] = index
-        # print("name",len(name_column_map), name_column_map)
+
         adjacency_graph = np.array(adjacency_graph)[:, 1:]
         adjacency_graph = adjacency_graph.astype(dtype=float)
-        # TODO: Do we have to consider only k most closest here?
         adjacency_graph = adjacency_graph * (adjacency_graph >= np.sort(adjacency_graph, axis=1)[:, [-k]])
         normalized_adjacency_graph = sklearn.preprocessing.normalize(adjacency_graph, norm='l1', axis=0)
         vector_size = len(adjacency_graph)
-        # print("ag",len(adjacency_graph))
+
         # class 1
+        restart_vector_value1 = 1/len(class1)
         restart_vector_class1 = np.zeros((vector_size, 1))
         for f in class1:
             column = name_column_map[f]
-            restart_vector_class1[column][0] = 1
+            restart_vector_class1[column][0] = restart_vector_value1
         ppr_vector_class1 = ppr(normalized_adjacency_graph, restart_vector_class1)
 
         # class 2
+        restart_vector_value2 = 1 /len(class2)
         restart_vector_class2 = np.zeros((vector_size, 1))
         for f in class2:
             column = name_column_map[f]
-            restart_vector_class2[column][0] = 1
+            restart_vector_class2[column][0] = restart_vector_value2
         ppr_vector_class2 = ppr(normalized_adjacency_graph, restart_vector_class2)
 
         # class 3
+        restart_vector_value3 = 1/len(class3)
         restart_vector_class3 = np.zeros((vector_size, 1))
         for f in class3:
             column = name_column_map[f]
-            restart_vector_class3[column][0] = 1
+            restart_vector_class3[column][0] = restart_vector_value3
         ppr_vector_class3 = ppr(normalized_adjacency_graph, restart_vector_class3)
 
-        # print(len(ppr_vector_class3))
-        # print(column_file_map_all[c-1])
         user_specified_column=name_column_map[column_file_map_all[c-1]]
+
         scores = [ppr_vector_class1[user_specified_column][0], ppr_vector_class2[user_specified_column][0],
                   ppr_vector_class3[user_specified_column][0]]
         label_map = {0: "vattene", 1: "combinato", 2: "daccordo"}
         label = scores.index(max(scores))
-        print(scores)
-        print("Based on PPR classifier-2 for given query the class label", label_map[label])
-
-    # --------------------------------------------- CALCULATING ACCURACY----------------------------------
-    # if accuracy == 1:
-    #     labels.tolist()
-    #     class_map = {}
-    #     for label in labels:
-    #         class_map[label[0]] = label[1]
-    #     count = 0
-    #     for f in name_column_map.keys():
-    #         # query_file = f.replace(".csv", "_words.csv")
-    #         column = name_column_map[f]
-    #         scores = [ppr_vector_class1[column][0], ppr_vector_class2[column][0],
-    #                   ppr_vector_class3[column][0]]
-    #         label_map = {0: "vattene", 1: "combinato", 2: "daccordo"}
-    #         label = label_map[scores.index(max(scores))]
-    #         query_file = f.replace("_words.csv", "")
-    #         if (label == class_map[query_file]):
-    #             count += 1
-    #     accuracy_ppr_classifier_2 = count / len(name_column_map)
-    #     print("Accuracy score: ", accuracy_ppr_classifier_2)
+        csv_write.writerow((unlabelled_gestures[c_index].replace("_words.csv",""), label_map[label]))
 
 
 def ppr_classifier(labels_train, vector_model, output_dir, user_option, custom_cost, k):
@@ -233,7 +212,7 @@ def ppr_classifier(labels_train, vector_model, output_dir, user_option, custom_c
                 dominant_features_class.append(labels_train_dict[filename])
 
         class_label = max(set(dominant_features_class), key=dominant_features_class.count)
-        csv_write.writerow((unlabelled_gestures[c_index], class_label))
+        csv_write.writerow((unlabelled_gestures[c_index].replace("_words.csv",""), class_label))
 
 
 class Node:
@@ -415,5 +394,5 @@ if __name__ == '__main__':
     ppr_classifier(labels_train, args.vector_model, args.output_dir, args.user_option,
                    args.custom_cost, args.k)
     print("PPR CLASSIFICATION - II")
-    ppr_2(args.query_file, np.array(labels_raw), args.vector_model, args.output_dir, args.user_option, args.custom_cost,
+    ppr_2(args.query_file, labels_train, args.vector_model, args.output_dir, args.user_option, args.custom_cost,
           args.k)
