@@ -1,3 +1,6 @@
+# import sys
+# sys.path.append("/Users/rahulsanjay/Downloads/MultimediaWebDatabases")
+
 from phase2 import task0a, task0b, task1, task3
 import argparse
 import pandas as pd
@@ -318,26 +321,26 @@ if __name__ == '__main__':
 
     parser.add_argument('--nn', type=int, help='number of neighbours', default = 30, required=False)
 
-    parser.add_argument('--gestures_dir', help='directory of input data', default = '../Phase3_data_for_report/', required=False)
-    parser.add_argument('--k', type=int, help='reduced vectors', default = 20, required=False)
+    parser.add_argument('--gestures_dir', help='directory of input data', default = 'Phase3_data_for_report/', required=False)
+    parser.add_argument('--k', type=int, help='reduced vectors', default = 40, required=False)
     parser.add_argument('--user_option', help='Type of dimensionality reduction', default = 'pca', required=False)
 
     # optional parameters
     parser.add_argument('--window', type=int, help='window length', default=3, required=False)
     parser.add_argument('--shift', type=int, help='shift length', default=3, required=False)
     parser.add_argument('--resolution', type=int, help='resolution', default=3, required=False)
-    parser.add_argument('--output_dir', help='output directory', default='../outputs/', required=False)
-    parser.add_argument('--vector_model', help='vector model', default='tf', required=False)
+    parser.add_argument('--output_dir', help='output directory', default='outputs/', required=False)
+    parser.add_argument('--vector_model', help='vector model', default='tf_idf', required=False)
     parser.add_argument('--custom_cost', type=bool, help='Custom cost for edit distance', default = False, required=False)
 
     args = parser.parse_args()
 
-    task0a.call_task0a(args.gestures_dir, args.window, args.shift, args.resolution)
-    task0b.call_task0b(args.output_dir)
+    # task0a.call_task0a(args.gestures_dir, args.window, args.shift, args.resolution)
+    # task0b.call_task0b(args.output_dir)
     task1.call_task1(args.output_dir, args.vector_model, args.user_option, args.k)
 
-
     vectors = pd.read_csv(args.output_dir + args.vector_model + "_" + args.user_option + "_vectors.csv", header = None, low_memory=False)
+    # vectors = pd.read_csv(args.output_dir + "vectors/tf_idf_vectors.csv", header = None, low_memory=False)
     vectors = vectors.replace({0: r'(_words.csv)'}, { 0 : ""}, regex=True)
     vectors = np.array(vectors)
     filenames = vectors[:, 0]
