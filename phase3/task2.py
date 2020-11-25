@@ -1,5 +1,5 @@
-# import sys
-# sys.path.append("/Users/rahulsanjay/Downloads/MultimediaWebDatabases")
+import sys
+sys.path.append("/Users/rahulsanjay/Downloads/MultimediaWebDatabases")
 
 from phase2 import task0a, task0b, task1, task3
 import argparse
@@ -59,7 +59,7 @@ def calc_accuracy(predicted, test) :
     print("Accuracy : ", accuracy)
 
 
-def ppr_2(query_file, labels_train, vector_model, output_dir, user_option, custom_cost, k):
+def ppr_2(labels_train, vector_model, output_dir, user_option, custom_cost, k):
     labels_train_dict = {}
     for each in labels_train.tolist():
         labels_train_dict[str(each[0]) + "_words.csv"] = each[1]
@@ -69,28 +69,29 @@ def ppr_2(query_file, labels_train, vector_model, output_dir, user_option, custo
     similarity_matrix_df = pd.read_csv(output_dir + "similarity_matrix_" + user_option + ".csv", header=None, low_memory=False)
 
     similarity_matrix = np.array(similarity_matrix_df)
-    column_file_map_all = similarity_matrix[0][1:].tolist()  # give a column number, return file name
+    column_file_map = similarity_matrix[0][1:].tolist()  # give a column number, return file name
 
-    name_column_map_all = dict()  # give a filename, returns the row index
-    for index, filename in enumerate(column_file_map_all):
-        name_column_map_all[filename] = index
+    name_column_map = dict()  # give a filename, returns the row index
+    for index, filename in enumerate(column_file_map):
+        name_column_map[filename] = index
 
-    output_file = open(output_dir + "ppr_2_classification.csv", "w")
-    labelled_gestures = [x for x in labels_train_dict.keys()]
-    labelled_gesture_columns = [name_column_map_all[x] + 1 for x in labelled_gestures]
-
-    unlabelled_gestures = list(set(column_file_map_all) - set(labelled_gestures))
-    unlabelled_gesture_columns = [name_column_map_all[x] + 1 for x in unlabelled_gestures]
-
-    csv_write = csv.writer(output_file)
-    # TODO pick from file
+    adjacency_graph = np.array(similarity_matrix[1:, 1:].tolist(), dtype=float)
+    adjacency_graph = adjacency_graph * (adjacency_graph >= np.sort(adjacency_graph, axis=1)[:, [-k]])
+    normalized_adjacency_graph = sklearn.preprocessing.normalize(adjacency_graph, norm='l1', axis=0)
+    vector_size = len(adjacency_graph)
+    # print(adjacency_graph)
     class1 = ["1_words.csv", "2_words.csv", "3_words.csv", "4_words.csv", "5_words.csv", "6_words.csv", "7_words.csv",
               "8_words.csv", "9_words.csv", "10_words.csv", "11_words.csv", "12_words.csv", "13_words.csv",
               "14_words.csv", "15_words.csv", "16_words.csv", "17_words.csv",
               "18_words.csv", "19_words.csv", "20_words.csv", "21_words.csv", "22_words.csv", "23_words.csv",
               "24_words.csv", "25_words.csv", "26_words.csv", "27_words.csv",
               "28_words.csv", "29_words.csv", "30_words.csv", "31_words.csv"]
-    # class1_columns=[name_column_map[x] + 1 for x in class1]
+    restart_vector_class1 = np.zeros((vector_size, 1))
+    for f in class1:
+        column = name_column_map[f]
+        restart_vector_class1[column][0] = 1/len(class1)
+    ppr_vector_class1 = ppr(normalized_adjacency_graph, restart_vector_class1)
+
     class2 = ["249_words.csv", "250_words.csv", "251_words.csv", "252_words.csv", "253_words.csv", "254_words.csv",
               "255_words.csv",
               "256_words.csv", "257_words.csv", "258_words.csv", "259_words.csv", "260_words.csv", "261_words.csv",
@@ -98,7 +99,12 @@ def ppr_2(query_file, labels_train, vector_model, output_dir, user_option, custo
               "266_words.csv", "267_words.csv", "268_words.csv", "269_words.csv", "270_words.csv", "271_words.csv",
               "272_words.csv", "273_words.csv", "274_words.csv", "275_words.csv",
               "276_words.csv", "277_words.csv", "278_words.csv", "279_words.csv"]
-    # class2_columns = [name_column_map[x] + 1 for x in class2]
+    restart_vector_class2 = np.zeros((vector_size, 1))
+    for f in class2:
+        column = name_column_map[f]
+        restart_vector_class2[column][0] = 1/len(class2)
+    ppr_vector_class2 = ppr(normalized_adjacency_graph, restart_vector_class2)
+
     class3 = ["559_words.csv", "560_words.csv", "561_words.csv", "562_words.csv", "563_words.csv", "564_words.csv",
               "565_words.csv",
               "566_words.csv", "567_words.csv", "568_words.csv", "569_words.csv", "570_words.csv", "571_words.csv",
@@ -106,57 +112,29 @@ def ppr_2(query_file, labels_train, vector_model, output_dir, user_option, custo
               "576_words.csv", "577_words.csv", "578_words.csv", "579_words.csv", "580_words.csv", "581_words.csv",
               "582_words.csv", "583_words.csv", "584_words.csv", "585_words.csv",
               "586_words.csv", "587_words.csv", "588_words.csv", "589_words.csv"]
-    # class3_columns = [name_column_map[x] + 1 for x in class3]
+    restart_vector_class3 = np.zeros((vector_size, 1))
+    for f in class3:
+        column = name_column_map[f]
+        restart_vector_class3[column][0] = 1/len(class3)
+    ppr_vector_class3 = ppr(normalized_adjacency_graph, restart_vector_class3)
 
+    output_file = open(output_dir + "ppr_2_classification.csv", "w")
+    labelled_gestures = [x for x in labels_train_dict.keys()]
+    labelled_gesture_columns = [name_column_map[x] + 1 for x in labelled_gestures]
+
+    unlabelled_gestures = list(set(column_file_map) - set(labelled_gestures))
+    unlabelled_gesture_columns = [name_column_map[x] + 1 for x in unlabelled_gestures]
+
+    csv_write = csv.writer(output_file)
     for c_index, c in enumerate(unlabelled_gesture_columns):
-        similarity_matrix_df = pd.read_csv(output_dir + "similarity_matrix_" + user_option + ".csv", low_memory=False)
-        gestures = labelled_gestures + [column_file_map_all[c - 1]]
-        adjacency_graph = similarity_matrix_df.loc[:, ["Nothing"] + gestures]
-        adjacency_graph = adjacency_graph.loc[adjacency_graph["Nothing"].isin(gestures)]
-
-        column_file_map = list(adjacency_graph)
-        column_file_map = column_file_map[1:]# give a column number, return file name
-
-        name_column_map = dict()  # give a filename, returns the row index
-        for index, filename in enumerate(column_file_map):
-            name_column_map[filename] = index
-
-        adjacency_graph = np.array(adjacency_graph)[:, 1:]
-        adjacency_graph = adjacency_graph.astype(dtype=float)
-        adjacency_graph = adjacency_graph * (adjacency_graph >= np.sort(adjacency_graph, axis=1)[:, [-k]])
-        normalized_adjacency_graph = sklearn.preprocessing.normalize(adjacency_graph, norm='l1', axis=0)
-        vector_size = len(adjacency_graph)
-
-        # class 1
-        restart_vector_value1 = 1/len(class1)
-        restart_vector_class1 = np.zeros((vector_size, 1))
-        for f in class1:
-            column = name_column_map[f]
-            restart_vector_class1[column][0] = restart_vector_value1
-        ppr_vector_class1 = ppr(normalized_adjacency_graph, restart_vector_class1)
-
-        # class 2
-        restart_vector_value2 = 1 /len(class2)
-        restart_vector_class2 = np.zeros((vector_size, 1))
-        for f in class2:
-            column = name_column_map[f]
-            restart_vector_class2[column][0] = restart_vector_value2
-        ppr_vector_class2 = ppr(normalized_adjacency_graph, restart_vector_class2)
-
-        # class 3
-        restart_vector_value3 = 1/len(class3)
-        restart_vector_class3 = np.zeros((vector_size, 1))
-        for f in class3:
-            column = name_column_map[f]
-            restart_vector_class3[column][0] = restart_vector_value3
-        ppr_vector_class3 = ppr(normalized_adjacency_graph, restart_vector_class3)
-
-        user_specified_column=name_column_map[column_file_map_all[c-1]]
-
+        # print(column_file_map[c - 1])
+        # column_file_map[c - 1]="575_words.csv"
+        user_specified_column=name_column_map[column_file_map[c-1]]
         scores = [ppr_vector_class1[user_specified_column][0], ppr_vector_class2[user_specified_column][0],
                   ppr_vector_class3[user_specified_column][0]]
         label_map = {0: "vattene", 1: "combinato", 2: "daccordo"}
         label = scores.index(max(scores))
+        # print(scores,column_file_map[c-1],label_map[label])
         csv_write.writerow((unlabelled_gestures[c_index].replace("_words.csv",""), label_map[label]))
 
 
@@ -322,7 +300,7 @@ if __name__ == '__main__':
     parser.add_argument('--nn', type=int, help='number of neighbours', default = 30, required=False)
 
     parser.add_argument('--gestures_dir', help='directory of input data', default = 'Phase3_data_for_report/', required=False)
-    parser.add_argument('--k', type=int, help='reduced vectors', default = 40, required=False)
+    parser.add_argument('--k', type=int, help='reduced vectors', default = 20, required=False)
     parser.add_argument('--user_option', help='Type of dimensionality reduction', default = 'pca', required=False)
 
     # optional parameters
@@ -330,7 +308,7 @@ if __name__ == '__main__':
     parser.add_argument('--shift', type=int, help='shift length', default=3, required=False)
     parser.add_argument('--resolution', type=int, help='resolution', default=3, required=False)
     parser.add_argument('--output_dir', help='output directory', default='outputs/', required=False)
-    parser.add_argument('--vector_model', help='vector model', default='tf_idf', required=False)
+    parser.add_argument('--vector_model', help='vector model', default='tf_idf_new', required=False)
     parser.add_argument('--custom_cost', type=bool, help='Custom cost for edit distance', default = False, required=False)
 
     args = parser.parse_args()
@@ -394,8 +372,8 @@ if __name__ == '__main__':
     calc_accuracy(labels_predicted, labels_test[:,1])
 
     print("PPR CLASSIFICATION - I")
-    ppr_classifier(labels_train, args.vector_model, args.output_dir, args.user_option,
-                   args.custom_cost, args.k)
+    # ppr_classifier(labels_train, args.vector_model, args.output_dir, args.user_option,
+                #    args.custom_cost, args.k)
     print("PPR CLASSIFICATION - II")
-    ppr_2(args.query_file, labels_train, args.vector_model, args.output_dir, args.user_option, args.custom_cost,
+    ppr_2(labels_train, args.vector_model, args.output_dir, args.user_option, args.custom_cost,
           args.k)

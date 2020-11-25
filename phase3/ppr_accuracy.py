@@ -6,8 +6,8 @@ import argparse
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Computes accuracy for classified data')
-    parser.add_argument('--truth', help='truth labels', default="../Phase3_data_for_report/all_labels.csv", required=False)
-    parser.add_argument('--file', help='classified data', default="../outputs/ppr_classification.csv", required=False)
+    parser.add_argument('--truth', help='truth labels', default="Phase3_data_for_report/all_labels.csv", required=False)
+    parser.add_argument('--file', help='classified data', default="outputs/ppr_2_classification.csv", required=False)
 
     args = parser.parse_args()
 
