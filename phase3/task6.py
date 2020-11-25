@@ -1,4 +1,3 @@
-# import the library
 from appJar import gui
 from task3 import get_t_closest_gestures
 from task4 import get_updated_gestures
