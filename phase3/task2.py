@@ -81,18 +81,21 @@ def ppr_2(labels_train, vector_model, output_dir, user_option, custom_cost, k):
     vector_size = len(adjacency_graph)
     # print(adjacency_graph)
 
-    class_set = set(labels_train_dict.values())
+    class_set = list(set(labels_train_dict.values()))
     classlist = [0]*len(class_set)
+    # label_map = {2: "vattene", 1: "combinato", 0: "daccordo"}
+    label_map = {}
     for index in range(len(class_set)):
         classlist[index] = []
     for i,c in enumerate(class_set):
         for k,v in labels_train_dict.items():
             if(c == v):
+                label_map[i] = c
                 classlist[i].append(k)
-
-    class1 = classlist[2]
+    
+    class1 = classlist[0]
     class2 = classlist[1]
-    class3 = classlist[0]
+    class3 = classlist[2]
 
     restart_vector_class1 = np.zeros((vector_size, 1))
     for f in class1:
@@ -126,7 +129,6 @@ def ppr_2(labels_train, vector_model, output_dir, user_option, custom_cost, k):
         user_specified_column=name_column_map[column_file_map[c-1]]
         scores = [ppr_vector_class1[user_specified_column][0], ppr_vector_class2[user_specified_column][0],
                   ppr_vector_class3[user_specified_column][0]]
-        label_map = {0: "vattene", 1: "combinato", 2: "daccordo"}
         label = scores.index(max(scores))
         # print(scores,column_file_map[c-1],label_map[label])
         csv_write.writerow((unlabelled_gestures[c_index].replace("_words.csv",""), label_map[label]))
