@@ -291,7 +291,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Create gesture words dictionary.')
     parser.add_argument('--query_file', help='Query file name', default = '250.csv', required=False)
 
-    parser.add_argument('--nn', type=int, help='number of neighbours', default = 30, required=False)
+    parser.add_argument('--nn', type=int, help='number of neighbours', default = 25, required=False)
 
     parser.add_argument('--gestures_dir', help='directory of input data', default = 'Phase3_data_for_report/', required=False)
     parser.add_argument('--k', type=int, help='reduced vectors', default = 20, required=False)
@@ -302,17 +302,15 @@ if __name__ == '__main__':
     parser.add_argument('--shift', type=int, help='shift length', default=3, required=False)
     parser.add_argument('--resolution', type=int, help='resolution', default=3, required=False)
     parser.add_argument('--output_dir', help='output directory', default='outputs/', required=False)
-    parser.add_argument('--vector_model', help='vector model', default='tf_idf_new', required=False)
+    parser.add_argument('--vector_model', help='vector model', default='tf_idf', required=False)
     parser.add_argument('--custom_cost', type=bool, help='Custom cost for edit distance', default = False, required=False)
 
     args = parser.parse_args()
 
-    # task0a.call_task0a(args.gestures_dir, args.window, args.shift, args.resolution)
-    # task0b.call_task0b(args.output_dir)
-    task1.call_task1(args.output_dir, args.vector_model, args.user_option, args.k)
-
-    vectors = pd.read_csv(args.output_dir + args.vector_model + "_" + args.user_option + "_vectors.csv", header = None, low_memory=False)
-    # vectors = pd.read_csv(args.output_dir + "vectors/tf_idf_vectors.csv", header = None, low_memory=False)
+    #task0a.call_task0a(args.gestures_dir, args.window, args.shift, args.resolution)
+    #task0b.call_task0b(args.output_dir)
+    task1.call_task1(args.output_dir, args.vector_model+'_new', args.user_option, args.k)
+    vectors = pd.read_csv(args.output_dir + args.vector_model + "_new_" + args.user_option+ "_vectors.csv", header = None, low_memory=False)
     vectors = vectors.replace({0: r'(_words.csv)'}, { 0 : ""}, regex=True)
     vectors = np.array(vectors)
     filenames = vectors[:, 0]
@@ -352,10 +350,39 @@ if __name__ == '__main__':
     labels_predicted = np.array(labels_predicted)
     print("K-nearest neighbours")
     calc_accuracy(labels_predicted[:,1], labels_test[:,1])
+    fnames = labels_test[:,0]
+    fnames = fnames[:, np.newaxis]
+    # labels_predicted = labels_predicted[:, np.newaxis]
+    output = np.concatenate((fnames, labels_predicted), axis=1)
+    pd.DataFrame(output).to_csv(args.output_dir + "knn_predictions.csv", header = None)
+    
+    task1.call_task1(args.output_dir, args.vector_model, args.user_option, args.k)
+    vectors = pd.read_csv(args.output_dir + args.vector_model + "_" + args.user_option + "_vectors.csv", header = None, low_memory=False)
+    vectors = vectors.replace({0: r'(_words.csv)'}, { 0 : ""}, regex=True)
+    vectors = np.array(vectors)
+    
+    vectors_train = []
+    for l in labels_train :
+        for v in vectors :
+            n = str(l[0])
+            if (n==v[0]) :
+                vectors_train.append(v)
+                break
 
+    vectors_test = []
+    for v in vectors :
+        for vt in vectors_train :
+            present = 0
+            if np.array_equal(v, vt) :
+                present = 1
+                break
+        if not present :
+            vectors_test.append(v)
+    vectors_train = np.array(vectors_train)
+    vectors_test = np.array(vectors_test)
 
     cmap, labels_train_int = labels_str_int(labels_train[:,1])
-    decisiontree = DecisionTreeClassifier(max_depth=10)
+    decisiontree = DecisionTreeClassifier(max_depth=15)
     decisiontree.fit(vectors_train[:,1:], labels_train_int)
 
     #print(vectors_test[:,1:])
@@ -364,10 +391,17 @@ if __name__ == '__main__':
     labels_predicted = np.array(labels_predicted)
     print("decision tree")
     calc_accuracy(labels_predicted, labels_test[:,1])
-
-    print("PPR CLASSIFICATION - I")
+    
+    # fnames = labels_test[:,0]
+    # fnames = fnames[:, np.newaxis]
+    labels_predicted = labels_predicted[:, np.newaxis]
+    output = np.concatenate((fnames, labels_predicted), axis=1)
+    pd.DataFrame(output).to_csv( args.output_dir + "decision_predictions.csv", header = None)
+    
+    
+    # print("PPR CLASSIFICATION - I")
     # ppr_classifier(labels_train, args.vector_model, args.output_dir, args.user_option,
                 #    args.custom_cost, args.k)
     print("PPR CLASSIFICATION - II")
-    ppr_2(labels_train, args.vector_model, args.output_dir, args.user_option, args.custom_cost,
+    ppr_2(labels_train, args.vector_model + "_new", args.output_dir, args.user_option, args.custom_cost,
           args.k)
