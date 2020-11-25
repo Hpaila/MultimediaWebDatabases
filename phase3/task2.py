@@ -356,11 +356,8 @@ if __name__ == '__main__':
     labels_predicted = np.array(labels_predicted)
     print("K-nearest neighbours")
     calc_accuracy(labels_predicted[:,1], labels_test[:,1])
-    fnames = labels_test[:,0]
-    fnames = fnames[:, np.newaxis]
-    labels_predicted = labels_predicted[:, np.newaxis]
-    output = np.concatenate((fnames, labels_predicted), axis=1)
-    pd.DataFrame(output).to_csv( args.output_dir + "knn_predictions.csv")
+    
+    pd.DataFrame(labels_predicted).to_csv( args.output_dir + "knn_predictions.csv", header=None)
     
     task1.call_task1(args.output_dir, args.vector_model, args.user_option, args.k)
     vectors = pd.read_csv(args.output_dir + args.vector_model + "_" + args.user_option + "_vectors.csv", header = None, low_memory=False)
@@ -402,7 +399,7 @@ if __name__ == '__main__':
     fnames = fnames[:, np.newaxis]
     labels_predicted = labels_predicted[:, np.newaxis]
     output = np.concatenate((fnames, labels_predicted), axis=1)
-    pd.DataFrame(output).to_csv( args.output_dir + "decision_predictions.csv")
+    pd.DataFrame(output).to_csv( args.output_dir + "decision_predictions.csv", header=None)
     
     
     print("PPR CLASSIFICATION - I")
