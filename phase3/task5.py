@@ -1,3 +1,6 @@
+# import sys
+# sys.path.append("/Users/rahulsanjay/Downloads/MultimediaWebDatabases")
+
 import argparse
 import sklearn
 import numpy as np
@@ -9,12 +12,12 @@ from phase3.task1 import ppr
 def get_updated_gestures_task5(relevant_gestures, irrelevant_gestures, t, query_gesture):
     print(query_gesture)
 
-    data_file_name = "../outputs/tf_idf_pca_vectors.csv"
-    similarity_matrix_file_name = "../outputs/similarity_matrix_pca.csv"
+    data_file_name = "outputs/tf_idf_pca_vectors.csv"
+    similarity_matrix_file_name = "outputs/similarity_matrix_pca.csv"
     data_matrix = np.array(pd.read_csv(data_file_name, header=None))
     query_gesture_row_index = np.where(data_matrix == query_gesture)[0][0]
     graph_degree = 10
-    task3.call_task3("tf_idf", "../outputs/", "pca", 4, "svd", "False")
+    task3.call_task3("tf_idf", "outputs/", "pca", 4, "svd", "False")
     relevant_gesture_row_indices = []
 
     irrelevant_gestures_vector = np.zeros((1, len(data_matrix[0]) - 1), dtype=object)
@@ -65,14 +68,14 @@ def get_updated_gestures_task5(relevant_gestures, irrelevant_gestures, t, query_
     dominant_feature_indices = dominant_feature_indices[:t]
 
     dominant_features = [column_file_map[i] for i in dominant_feature_indices]
-    print("Dominant features ", dominant_features)
+    # print("Dominant features ", dominant_features)
     return dominant_features
 
 def initial_result_task5 (vectors, t, query_gesture):
     data_file_name = vectors
-    task1.call_task1("../outputs/", "tf_idf", "pca", 10)
-    task3.call_task3("tf_idf", "../outputs/", "pca", 4, "svd", "False")
-    similarity_matrix_file_name = "../outputs/similarity_matrix_pca.csv"
+    task1.call_task1("outputs/", "tf_idf", "pca", 10)
+    task3.call_task3("tf_idf", "outputs/", "pca", 4, "svd", "False")
+    similarity_matrix_file_name = "outputs/similarity_matrix_pca.csv"
     data_matrix = np.array(pd.read_csv(data_file_name, header=None))
     query_gesture_row_index = np.where(data_matrix == query_gesture)[0][0]
     graph_degree = 10
@@ -112,9 +115,9 @@ if __name__ == '__main__':
     parser.add_argument('--query_gesture', help='query gesture', required=True)
     parser.add_argument('--t', type=int, help='get t most similar gestures', required=True)
     parser.add_argument('--vector_model', help='vector model', default='tf_idf', required=False)
-    parser.add_argument('--gestures_dir', help='directory of input data', default='../sample/', required=False)
+    parser.add_argument('--gestures_dir', help='directory of input data', default='sample/', required=False)
     parser.add_argument('--user_option', help='Type of dimensionality reduction', default='pca', required=False)
-    parser.add_argument('--output_dir', help='output directory', default='../outputs/', required=False)
+    parser.add_argument('--output_dir', help='output directory', default='outputs/', required=False)
     parser.add_argument('--custom_cost', type=bool, help='Custom cost for edit distance', required=False)
     parser.add_argument('--user_option_k', type=int, help='Number of reduced dimensions', default=10, required=False)
 
