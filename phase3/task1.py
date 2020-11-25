@@ -24,7 +24,7 @@ def construct_restart_vector(vector_size, seed_data_columns):
 
 
 def ppr(normalized_graph, restart_vector):
-    c = 0.45
+    c = 0.15
     max_iterations = 0
     new_steady_state_prob = restart_vector
     steady_state_prob = np.zeros(restart_vector.shape)
@@ -37,7 +37,7 @@ def ppr(normalized_graph, restart_vector):
     # b = np.array([[1],[2],[3]])
     # print(np.dot(a,b))
 
-    print("no of iterations to converge: ", max_iterations)
+    # print("no of iterations to converge: ", max_iterations)
     return steady_state_prob
 
 
@@ -46,6 +46,10 @@ def visualize_dominant_features(gestures_dir, gestures):
         for comp in ['X/', 'Y/', 'Z/', 'W/']:
             data = pd.read_csv(gestures_dir + comp + str(file).replace("_words", ""), header=None).transpose()
             data.plot.line()
+            plt.ylabel('sensors')
+            plt.xlabel('time series')
+            title = comp.replace("/", "") + "-"+file.replace("_words", "")
+            plt.suptitle(title)
             plt.show()
 
 
@@ -113,7 +117,6 @@ if __name__ == '__main__':
     for (s, i) in sorted_list:
         dominant_feature_indices.append(i)
     dominant_feature_indices = dominant_feature_indices[:args.m]
-    print(dominant_feature_indices)
 
     dominant_features = [column_file_map[i] for i in dominant_feature_indices]
     print("Dominant features ", dominant_features)
