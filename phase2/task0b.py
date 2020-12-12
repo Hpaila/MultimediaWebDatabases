@@ -131,7 +131,7 @@ def create_tf_idf_vectors_new(directory_path, words_dir_path, feature_list):
         tf_vector_square = np.square(tf_vector)
         tf_idf_vector_new_numerator = tf_vector * idf_vector
         tf_idf_vector_new_denominaator = np.sqrt(tf_vector_square * idf_vector_square)
-        tf_idf_vector_new = np.divide(tf_idf_vector_new_numerator, tf_idf_vector_new_denominaator)
+        tf_idf_vector_new = np.divide(tf_idf_vector_new_numerator, tf_idf_vector_new_denominaator, out = np.zeros(tf_vector.shape), where = (tf_idf_vector_new_denominaator!=0))
         output = tf_vectors_with_labels[0:,:1][count].tolist()
         output.extend(tf_idf_vector_new.tolist())
         csv_write.writerow(output)

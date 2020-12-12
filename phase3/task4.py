@@ -9,9 +9,9 @@ def convert(val):
         return 1
     return 0
 
-def get_updated_gestures(relevant_gestures, irrelevant_gestures, t, initial_search_results):
+def get_updated_gestures(relevant_gestures, irrelevant_gestures, t, initial_search_results, vectors_path):
     #By default, using tf_idf vectors
-    input_vectors_df = pd.read_csv("outputs/vectors/tf_idf_vectors.csv")
+    input_vectors_df = pd.read_csv(vectors_path)
     input_vectors_with_labels = np.array(input_vectors_df)
     input_vectors = input_vectors_with_labels[0:, 1:]
 
@@ -67,12 +67,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Probabilistic relevance feedback')
     parser.add_argument('--query_gesture', help='query gesture', required=True)
     parser.add_argument('--t', type=int, help='get t most similar gestures', required=True)
+    parser.add_argument('--vectors', help='input vectors path', required=True)
     args = parser.parse_args()
 
     query_gesture = args.query_gesture + "_words.csv"
     
     #initial run
-    initial_search_results = get_t_closest_gestures(6, 3, "outputs/vectors/tf_idf_vectors.csv", args.t, query_gesture)
+    initial_search_results = get_t_closest_gestures(6, 3, args.vectors, args.t, query_gesture)
 
     print("Initial search results are")
     for result in initial_search_results:
@@ -94,7 +95,8 @@ if __name__ == '__main__':
             irrelevant_gestures = irrelevant_gestures.split(" ")
             irrelevant_gestures = [gesture + "_words.csv" for gesture in irrelevant_gestures]
 
-        updated_results = get_updated_gestures(relevant_gestures, irrelevant_gestures, args.t, previous_search_results)
+        updated_results = get_updated_gestures(relevant_gestures, irrelevant_gestures, args.t, previous_search_results, args.vectors)
         previous_search_results = updated_results
+        print("Revised results are as below...")
         for res in updated_results:
             print(res)

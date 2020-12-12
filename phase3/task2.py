@@ -33,7 +33,7 @@ def calc_mode(data) :
 
 
 def knn(vectors_train, vectors_test, labels_train, nn) :
-
+    
     predictions = []
     filenames = vectors_train[:,0]
     filenames = filenames[:, np.newaxis]
@@ -318,7 +318,7 @@ if __name__ == '__main__':
     filenames = vectors[:, 0]
 
     labels_raw = np.array(pd.read_csv(args.gestures_dir + 'all_labels.csv', index_col=None, header=None))
-    labels_train = np.array(pd.read_csv(args.gestures_dir + 'training_labels.csv', index_col = None, header=None))
+    labels_train = np.array(pd.read_csv(args.gestures_dir + 'labels.csv', index_col = None, header=None))
 
     vectors_train = []
     for l in labels_train :
@@ -330,8 +330,9 @@ if __name__ == '__main__':
 
     vectors_test = []
     for v in vectors :
+        present = 0
         for vt in vectors_train :
-            present = 0
+            # present = 0
             if np.array_equal(v, vt) :
                 present = 1
                 break

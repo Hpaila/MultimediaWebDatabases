@@ -1,5 +1,5 @@
-# import sys
-# sys.path.append("/Users/rahulsanjay/Downloads/MultimediaWebDatabases")
+import sys
+sys.path.append("/Users/rahulsanjay/Downloads/MultimediaWebDatabases")
 
 import argparse
 import sklearn
@@ -76,7 +76,7 @@ def initial_result_task5 (vectors, t, query_gesture):
     task1.call_task1("outputs/", "tf_idf", "pca", 10)
     task3.call_task3("tf_idf", "outputs/", "pca", 4, "svd", "False")
     similarity_matrix_file_name = "outputs/similarity_matrix_pca.csv"
-    data_matrix = np.array(pd.read_csv(data_file_name, header=None))
+    data_matrix = np.array(pd.read_csv(data_file_name, header=None, low_memory=False))
     query_gesture_row_index = np.where(data_matrix == query_gesture)[0][0]
     graph_degree = 10
 
@@ -129,7 +129,7 @@ if __name__ == '__main__':
     query_gesture = args.query_gesture + "_words.csv"
     data_file_name = args.output_dir+args.vector_model+"_"+args.user_option+"_vectors.csv"
     similarity_matrix_file_name = args.output_dir + "similarity_matrix_" + args.user_option + ".csv"
-    data_matrix = np.array(pd.read_csv(data_file_name, header=None))
+    data_matrix = np.array(pd.read_csv(data_file_name, header=None, low_memory=False))
     query_gesture_row_index = np.where(data_matrix == query_gesture)[0][0]
     # print(query_gesture_row_index, " is row index")
     graph_degree = 10
@@ -141,7 +141,7 @@ if __name__ == '__main__':
         query_gesture_values = data_matrix[query_gesture_row_index, 1:]
 
         similarity_matrix = np.array(
-            pd.read_csv(similarity_matrix_file_name, header=None))
+            pd.read_csv(similarity_matrix_file_name, header=None, low_memory=False))
 
         column_file_map = similarity_matrix[0][1:].tolist()  # give a column number, return file name
 

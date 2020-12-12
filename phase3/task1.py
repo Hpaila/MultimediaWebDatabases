@@ -1,5 +1,5 @@
-# import sys
-# sys.path.append("/Users/rahulsanjay/Downloads/MultimediaWebDatabases")
+import sys
+sys.path.append("/Users/rahulsanjay/Downloads/MultimediaWebDatabases")
 
 import argparse
 import numpy as np
